@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emulador de Design UI: 3 Eras</title>
+    <!-- Tailwind CSS para estruturação rápida -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones detalhados de cada era -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================================================
+           1. ESTILOS GLOBAIS E DEFINIÇÕES DO SIMULADOR
+           ========================================================================== */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+        }
+
+        /* Transição suave para transformações de estilo */
+        .theme-transition {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ==========================================================================
+           2. ESTILOS ESPECÍFICOS DO AERO SKEUOMORFISMO (WINDOWS 7 / VISTA)
+           - Brilhos intensos, gradientes pesados, bordas de vidro e texturas físicas.
+           ========================================================================== */
+        .theme-aero .device-screen {
+            background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            box-shadow: inset 0 0 30px rgba(255,255,255,0.2);
+            border-radius: 24px;
+        }
+
+        .theme-aero .aero-glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+
+        /* Efeito de Reflexo Glossy do Windows Aero */
+        .theme-aero .aero-gloss-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 90%, transparent 100%);
+            border-top-left-radius: 11px;
+            border-top-right-radius: 11px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Botões Aero com gel/relevo 3D */
+        .theme-aero .aero-btn {
+            background: linear-gradient(180deg, #60a5fa 0%, #2563eb 50%, #1d4ed8 50.1%, #1e40af 100%);
+            border: 1px solid #1e3a8a;
+            border-top: 1.5px solid #93c5fd;
+            border-radius: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.4),
+                        inset 0 1px 0 rgba(255,255,255,0.4);
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.5);
+            transition: filter 0.2s;
+        }
+        .theme-aero .aero-btn:hover {
+            filter: brightness(1.1);
+        }
+        .theme-aero .aero-btn:active {
+            background: linear-gradient(180deg, #1e40af 0%, #1d4ed8 50%, #2563eb 50.1%, #60a5fa 100%);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Inputs Aero com sombra interna e borda acetinada */
+        .theme-aero .aero-input {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1.5px solid #475569;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.2);
+            color: #0f172a;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .theme-aero .aero-input:focus {
+            background: #ffffff;
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2), 0 0 8px rgba(59, 130, 246, 0.6);
+        }
+
+        /* Ícones e textos coloridos e realistas no Aero */
+        .theme-aero .aero-text-title {
+            background: linear-gradient(to bottom, #ffffff, #cfd8dc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+        }
+
+        /* ==========================================================================
+           3. ESTILOS DO MATERIAL DESIGN (GOOGLE)
+           - Papel digital, sombras suaves de elevação, cantos amigáveis e minimalismo.
+           ========================================================================== */
+        .theme-material .device-screen {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            border-radius: 16px;
+        }
+
+        .theme-material .material-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .theme-material .material-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .theme-material .material-btn {
+            background-color: #6366f1;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .theme-material .material-btn:hover {
+            background-color: #4f46e5;
+            box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3);
+        }
+        .theme-material .material-btn:active {
+            transform: scale(0.97);
+        }
+
+        .theme-material .material-input {
+            background-color: #f8fafc;
+            border: none;
+            border-bottom: 2px solid #cbd5e1;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .theme-material .material-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background-color: #e0e7ff;
+        }
+
+        /* ==========================================================================
+           4. ESTILOS DO FLAT DESIGN MINIMALISTA (2D PURO)
+           - Sem profundidade, sem gradientes, cantos vivos de 90° e alto contraste.
+           ========================================================================== */
+        .theme-flat .device-screen {
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 0px;
+        }
+
+        .theme-flat .flat-card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0px;
+        }
+
+        .theme-flat .flat-btn {
+            background-color: #000000;
+            color: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: background-color 0.1s, color 0.1s;
+        }
+        .theme-flat .flat-btn:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .theme-flat .flat-btn:active {
+            background-color: #e5e5e5;
+        }
+
+        .theme-flat .flat-input {
+            background-color: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 0px;
+            color: #000000;
+        }
+        .theme-flat .flat-input:focus {
+            outline: none;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col min-h-screen text-slate-100 antialiased">
+
+    <!-- CABEÇALHO PRINCIPAL -->
+    <header class="max-w-6xl w-full mx-auto mb-8 bg-slate-950 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                <span class="bg-blue-600 text-xs text-white px-2.5 py-1 rounded-full uppercase font-black">Prática</span>
+                Simulador das 3 Eras do Web Design
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">
+                Ensine aos seus alunos a evolução entre: <strong>Skeuomorfismo (Vista/7)</strong>, <strong>Material Design</strong> e <strong>Flat Design</strong>.
+            </p>
+        </div>
+
+        <!-- CONTROLADORES DA ERA (Estilo Ativo) -->
+        <div class="bg-slate-900 p-1.5 rounded-xl border border-slate-700 flex flex-wrap gap-1">
+            <button onclick="switchStyle('aero')" id="btn-aero" class="px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-white bg-blue-600 shadow-md">
+                🖥️ Vista/7 Aero
+            </button>
+            <button onclick="switchStyle('material')" id="btn-material" class="px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white">
+                📱 Material Design
+            </button>
+            <button onclick="switchStyle('flat')" id="btn-flat" class="px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white">
+                ⬛ Flat Minimalista
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTAINER DA SIMULAÇÃO -->
+    <main class="max-w-6xl w-full mx-auto flex flex-col lg:flex-row gap-8 items-start justify-center flex-1">
+        
+        <!-- O TELEFONE SIMULADO (A ESQUERDA) -->
+        <div class="w-full lg:w-1/2 flex flex-col items-center">
+            
+            <div class="mb-4 text-center">
+                <span class="text-xs uppercase tracking-wider text-slate-500 font-bold">Estilo Ativo Atualmente:</span>
+                <h2 id="current-style-title" class="text-base font-bold text-blue-400 mt-0.5">Windows Aero Skeuomorfismo (2007)</h2>
+            </div>
+
+            <!-- Moldura do Dispositivo que muda as classes via JS -->
+            <div id="device-wrapper" class="theme-aero w-full max-w-sm border-[8px] border-slate-700 rounded-[36px] bg-slate-950 overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] theme-transition">
+                
+                <!-- Tela do Dispositivo -->
+                <div class="device-screen h-[620px] flex flex-col justify-between p-6 overflow-y-auto relative theme-transition">
+                    
+                    <!-- EFEITO DE VIDRO GLOSSY EXCLUSIVO AERO (Será ocultado via CSS se não for Aero) -->
+                    <div class="aero-gloss-overlay"></div>
+
+                    <!-- BARRA DE STATUS -->
+                    <div class="flex justify-between items-center text-[10px] font-bold tracking-wide mb-4 z-10 relative">
+                        <span>09:41 AM</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-signal"></i>
+                            <span>5G</span>
+                            <div class="w-5 h-2.5 border border-current rounded-sm p-[1.5px] flex items-center">
+                                <div class="bg-current h-full w-[85%] rounded-3xs"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         TELA 1: LOGIN (ATIVO POR PADRÃO)
+                         ========================================== -->
+                    <div id="screen-login" class="flex-1 flex flex-col justify-center z-10 relative">
+                        
+                        <!-- Logo / Ícone de Cadeado -->
+                        <div class="text-center mb-6">
+                            <!-- Ícones Customizados por Era -->
+                            <div id="login-icon-container" class="inline-flex items-center justify-center mb-3">
+                                <!-- Ícone Aero -->
+                                <div class="aero-icon w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 border border-white/50 flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.4)] animate-pulse">
+                                    <i class="fa-solid fa-shield-halved text-white text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></i>
+                                </div>
+                            </div>
+                            <h3 id="login-header-title" class="text-2xl font-black aero-text-title tracking-tight">Acesso Seguro</h3>
+                            <p id="login-header-sub" class="text-[11px] text-sky-200 mt-1">Windows Secure Sign-in Portal</p>
+                        </div>
+
+                        <!-- Form de Login -->
+                        <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                            <!-- Campo Email -->
+                            <div>
+                                <label class="block text-xs font-bold mb-1 uppercase tracking-wider opacity-90">Email Acadêmico</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                                        <i class="fa-solid fa-envelope text-xs"></i>
+                                    </span>
+                                    <input type="email" required placeholder="aluno@escola.com" class="w-full pl-9 pr-3 py-2.5 text-xs theme-transition aero-input" id="input-email" />
+                                </div>
+                            </div>
+
+                            <!-- Campo Senha -->
+                            <div>
+                                <label class="block text-xs font-bold mb-1 uppercase tracking-wider opacity-90">Senha de Acesso</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                                        <i class="fa-solid fa-lock text-xs"></i>
+                                    </span>
+                                    <input type="password" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 text-xs theme-transition aero-input" id="input-password" />
+                                    <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                                        <i class="fa-solid fa-eye text-xs" id="password-eye-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Lembrar e Esqueci Senha -->
+                            <div class="flex items-center justify-between text-[11px] font-bold">
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" class="rounded cursor-pointer accent-blue-600" id="remember-me" />
+                                    <span>Lembrar de mim</span>
+                                </label>
+                                <a href="#" onclick="showCustomAlert('Instruções de envio enviadas para o seu e-mail cadastrado!')" class="hover:underline text-sky-300" id="link-forgot">Esqueci minha senha</a>
+                            </div>
+
+                            <!-- Botão de Ação Principal -->
+                            <button type="submit" class="w-full py-3 text-xs tracking-wider theme-transition aero-btn flex items-center justify-center gap-1">
+                                <span>CONECTAR AO PORTAL</span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </form>
+
+                        <!-- Divisor SSO -->
+                        <div class="relative my-5">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-white/20"></div>
+                            </div>
+                            <div class="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
+                                <span class="bg-slate-900/50 px-2.5 py-0.5 rounded-full" id="sso-label">Conexão SSO</span>
+                            </div>
+                        </div>
+
+                        <!-- SSO Grid -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="showCustomAlert('Conectando via conta Google...')" class="flex items-center justify-center gap-2 py-2 text-[10px] font-bold border border-white/20 rounded-md bg-white/5 hover:bg-white/10 text-white transition-all">
+                                <i class="fa-brands fa-google text-red-400"></i> Google
+                            </button>
+                            <button onclick="showCustomAlert('Conectando via conta GitHub...')" class="flex items-center justify-center gap-2 py-2 text-[10px] font-bold border border-white/20 rounded-md bg-white/5 hover:bg-white/10 text-white transition-all">
+                                <i class="fa-brands fa-github"></i> GitHub
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==========================================
+                         TELA 2: HOME (WEATHER) - OCULTA PADRÃO
+                         ========================================== -->
+                    <div id="screen-home" class="hidden flex-1 flex flex-col justify-start z-10 relative">
+                        
+                        <!-- Topo Logado -->
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <span class="text-[9px] uppercase font-bold tracking-widest opacity-60">Área do Estudante</span>
+                                <h4 class="text-sm font-bold flex items-center gap-1.5" id="user-greeting">
+                                    <span>Bem-vindo, Aluno</span> <i class="fa-solid fa-circle-check text-green-400 text-[10px]"></i>
+                                </h4>
+                            </div>
+                            <button onclick="logout()" class="px-2.5 py-1 text-[9px] font-bold border border-rose-500 bg-rose-500/10 rounded text-rose-300 hover:bg-rose-500 hover:text-white transition-all uppercase">
+                                Sair
+                            </button>
+                        </div>
+
+                        <!-- Header Clima -->
+                        <div class="mb-4">
+                            <h5 class="text-[11px] font-bold uppercase tracking-wider opacity-70">Previsão Climática dos Campi</h5>
+                            <p class="text-[10px] opacity-60 mt-0.5">Confira o clima atual nas filiais universitárias.</p>
+                        </div>
+
+                        <!-- Cards de Previsão -->
+                        <div class="grid grid-cols-2 gap-3" id="weather-grid">
+                            
+                            <!-- Card 1: São Paulo -->
+                            <div class="weather-card p-3.5 flex flex-col justify-between h-32 aero-glass">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h6 class="text-xs font-bold">São Paulo</h6>
+                                        <span class="text-[9px] opacity-75 font-semibold">Garoa Fina</span>
+                                    </div>
+                                    <i class="fa-solid fa-cloud-rain text-sky-300 text-lg"></i>
+                                </div>
+                                <div class="my-1.5">
+                                    <span class="text-xl font-black">19°C</span>
+                                </div>
+                                <div class="flex justify-between text-[8px] font-bold opacity-60">
+                                    <span><i class="fa-solid fa-droplet text-[7px]"></i> 84%</span>
+                                    <span><i class="fa-solid fa-wind text-[7px]"></i> 12km/h</span>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Rio de Janeiro -->
+                            <div class="weather-card p-3.5 flex flex-col justify-between h-32 aero-glass">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h6 class="text-xs font-bold">Rio Janeiro</h6>
+                                        <span class="text-[9px] opacity-75 font-semibold">Ensolarado</span>
+                                    </div>
+                                    <i class="fa-solid fa-sun text-yellow-400 text-lg"></i>
+                                </div>
+                                <div class="my-1.5">
+                                    <span class="text-xl font-black">32°C</span>
+                                </div>
+                                <div class="flex justify-between text-[8px] font-bold opacity-60">
+                                    <span><i class="fa-solid fa-droplet text-[7px]"></i> 52%</span>
+                                    <span><i class="fa-solid fa-wind text-[7px]"></i> 8km/h</span>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Curitiba -->
+                            <div class="weather-card p-3.5 flex flex-col justify-between h-32 aero-glass">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h6 class="text-xs font-bold">Curitiba</h6>
+                                        <span class="text-[9px] opacity-75 font-semibold">Nublado</span>
+                                    </div>
+                                    <i class="fa-solid fa-cloud text-slate-300 text-lg"></i>
+                                </div>
+                                <div class="my-1.5">
+                                    <span class="text-xl font-black">12°C</span>
+                                </div>
+                                <div class="flex justify-between text-[8px] font-bold opacity-60">
+                                    <span><i class="fa-solid fa-droplet text-[7px]"></i> 91%</span>
+                                    <span><i class="fa-solid fa-wind text-[7px]"></i> 15km/h</span>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Manaus -->
+                            <div class="weather-card p-3.5 flex flex-col justify-between h-32 aero-glass">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h6 class="text-xs font-bold">Manaus</h6>
+                                        <span class="text-[9px] opacity-75 font-semibold">Tempestade</span>
+                                    </div>
+                                    <i class="fa-solid fa-cloud-showers-water text-purple-300 text-lg"></i>
+                                </div>
+                                <div class="my-1.5">
+                                    <span class="text-xl font-black">27°C</span>
+                                </div>
+                                <div class="flex justify-between text-[8px] font-bold opacity-60">
+                                    <span><i class="fa-solid fa-droplet text-[7px]"></i> 89%</span>
+                                    <span><i class="fa-solid fa-wind text-[7px]"></i> 21km/h</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Link para Voltar ao Login -->
+                        <button onclick="logout()" class="mt-6 w-full text-center text-xs opacity-60 hover:opacity-100 font-bold hover:underline">
+                            <i class="fa-solid fa-arrow-left"></i> Voltar à Tela de Login
+                        </button>
+                    </div>
+
+                    <!-- NOTIFICAÇÃO DE ATUALIZAÇÃO -->
+                    <div class="mt-4 text-center text-[8px] opacity-40 z-10 relative">
+                        Última sincronização: Agora mesmo • Porto Alegre
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- PAINEL DIDÁTICO INTERATIVO (A DIREITA) -->
+        <div class="w-full lg:w-1/2 flex flex-col gap-6">
+            
+            <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <h3 class="text-lg font-black text-white mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-500"></i>
+                    Análise Teórica para Alunos
+                </h3>
+                <p class="text-sm text-slate-400 mb-4 leading-relaxed">
+                    Clique nos botões do cabeçalho para ver como a mesma interface reage a diferentes filosofias estéticas.
+                </p>
+
+                <!-- Informações Dinâmicas de Estudo -->
+                <div id="theory-content" class="space-y-4">
+                    <!-- Aero Content por Padrão -->
+                    <div class="p-4 rounded-xl border border-blue-500/30 bg-blue-950/20 text-blue-200">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-desktop text-sky-400"></i> Windows Aero Skeuomorfismo (2007)
+                        </h4>
+                        <ul class="text-xs space-y-2 list-disc list-inside">
+                            <li><strong>Metáfora Física:</strong> Imita materiais reais como vidro, acrílico, metal e plástico.</li>
+                            <li><strong>Reflexos (Gloss):</strong> O efeito brilhante de luz "batendo" no objeto gera realismo tridimensional.</li>
+                            <li><strong>Profundidade e Sombras:</strong> Bordas polidas e sombras densas simulam que as janelas flutuam fisicamente sobre a tela.</li>
+                            <li><strong>Ícones Coloridos e Reais:</strong> Cores ricas e detalhadas, tentando fazer com que o ícone pareça um objeto tátil do mundo real.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD DE ATIVIDADE PRÁTICA -->
+            <div class="bg-gradient-to-r from-blue-950 to-slate-950 p-6 rounded-2xl border border-blue-800/50">
+                <h4 class="font-extrabold text-sm mb-2 flex items-center gap-2 text-blue-300">
+                    <i class="fa-solid fa-laptop-code"></i> Desafio de Investigação para Alunos
+                </h4>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Reparem como o <strong>Aero Skeuomorfismo</strong> exige dezenas de propriedades gráficas e camadas (gradientes complexos, efeitos de reflexo no topo do botão) para "enganar" os olhos em 3D, enquanto o <strong>Flat Design</strong> remove tudo e foca exclusivamente nas linhas limpas e na tipografia pura. Qual deles parece carregar mais rápido e ter mais legibilidade à distância?
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- BANNER DE ALERTAS PERSONALIZADO -->
+    <div id="custom-alert" class="fixed bottom-6 right-6 bg-slate-900 border border-slate-700 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 transition-all transform translate-y-24 opacity-0 z-50 text-xs">
+        <i class="fa-solid fa-circle-exclamation text-blue-500 text-base" id="alert-icon"></i>
+        <span id="alert-text">Mensagem do sistema</span>
+    </div>
+
+    <!-- FOOTER DA COMPANHIA -->
+    <footer class="mt-12 text-center text-xs text-slate-500 py-6 border-t border-slate-800">
+        Desenvolvido para Laboratórios Acadêmicos de Interface e Interação Humano-Computador (IHC).
+    </footer>
+
+    <!-- ==========================================================================
+         5. JAVASCRIPT DO SISTEMA
+         ========================================================================== -->
+    <script>
+        let currentStyle = 'aero';
+        let showPassword = false;
+
+        // Alterna os estilos visuais
+        function switchStyle(styleName) {
+            currentStyle = styleName;
+            
+            // Remove classes antigas do container
+            const device = document.getElementById('device-wrapper');
+            device.className = 'w-full max-w-sm border-[8px] border-slate-700 rounded-[36px] bg-slate-950 overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] theme-transition';
+            device.classList.add('theme-' + styleName);
+
+            // Reseta botões do header
+            document.getElementById('btn-aero').className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white";
+            document.getElementById('btn-material').className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white";
+            document.getElementById('btn-flat').className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-slate-400 hover:text-white";
+
+            // Ativa o botão correto e altera conteúdos
+            const activeBtn = document.getElementById('btn-' + styleName);
+            const titleElement = document.getElementById('current-style-title');
+            const theoryContainer = document.getElementById('theory-content');
+
+            // Troca classes internas dos elementos para casar com a era
+            adaptComponentsForTheme(styleName);
+
+            if (styleName === 'aero') {
+                activeBtn.className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-white bg-blue-600 shadow-md";
+                titleElement.textContent = "Windows Aero Skeuomorfismo (2007)";
+                titleElement.className = "text-base font-bold text-blue-400 mt-0.5";
+                
+                theoryContainer.innerHTML = `
+                    <div class="p-4 rounded-xl border border-blue-500/30 bg-blue-950/20 text-blue-200">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-desktop text-sky-400"></i> Aero Skeuomorfismo (Vista/7)
+                        </h4>
+                        <ul class="text-xs space-y-2 list-disc list-inside">
+                            <li><strong>Metáfora Física:</strong> Relevos macios de vidro acrílico que refletem e dobram a luz ambiente virtual.</li>
+                            <li><strong>Reflexo Diagonal:</strong> Note o semi-círculo brilhante (gloss) no topo do dispositivo e botões.</li>
+                            <li><strong>Complexidade Visual:</strong> Gradientes agressivos de duas ou mais fases para simular plástico abaulado.</li>
+                            <li><strong>Foco em Detalhes:</strong> Ícones 3D ricos em gradientes que representam objetos tridimensionais concretos.</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (styleName === 'material') {
+                activeBtn.className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-white bg-indigo-600 shadow-md";
+                titleElement.textContent = "Material Design (2014)";
+                titleElement.className = "text-base font-bold text-indigo-400 mt-0.5";
+
+                theoryContainer.innerHTML = `
+                    <div class="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 text-indigo-200">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-mobile-screen-button text-indigo-400"></i> Material Design (Google)
+                        </h4>
+                        <ul class="text-xs space-y-2 list-disc list-inside">
+                            <li><strong>A Metáfora do Papel:</strong> Tudo é visto como camadas de folhas físicas, empilhadas umas sobre as outras.</li>
+                            <li><strong>Eixo Z (Sombras Suaves):</strong> Sem brilhos nos botões, mas sombras suaves e desfocadas que mostram qual elemento está suspenso.</li>
+                            <li><strong>Design Amigável:</strong> Cantos arredondados, fontes limpas e cores com contraste estudado para uso prolongado.</li>
+                            <li><strong>Ícones Funcionais:</strong> Símbolos simples de cor sólida que priorizam a velocidade de reconhecimento mental.</li>
+                        </ul>
+                    </div>
+                `;
+            } else if (styleName === 'flat') {
+                activeBtn.className = "px-4 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 text-black bg-white shadow-md";
+                titleElement.textContent = "Flat Design Minimalista (Atual)";
+                titleElement.className = "text-base font-bold text-slate-300 mt-0.5";
+
+                theoryContainer.innerHTML = `
+                    <div class="p-4 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-border-all text-slate-400"></i> Flat Design Minimalista
+                        </h4>
+                        <ul class="text-xs space-y-2 list-disc list-inside">
+                            <li><strong>Ausência de Profundidade:</strong> Nenhuma sombra de botão ou elemento. O design assume sua natureza digital bidimensional (2D).</li>
+                            <li><strong>Geometria Rígida:</strong> Cantos retos vivos de 90° e bordas grossas sólidas de contraste em preto puro.</li>
+                            <li><strong>Hierarquia Tipográfica:</strong> Em vez de sombras ou brilhos para destacar algo, usa-se peso tipográfico extremo.</li>
+                            <li><strong>Ícones Reduzidos:</strong> Silhuetas pretas ou brancas extremamente limpas e geométricas.</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // Adapta dinamicamente as classes dos elementos internos da tela de acordo com o estilo ativo
+        function adaptComponentsForTheme(theme) {
+            // Ajuste dos inputs
+            const inputs = [document.getElementById('input-email'), document.getElementById('input-password')];
+            inputs.forEach(input => {
+                if (input) {
+                    input.className = "w-full pl-9 pr-3 py-2.5 text-xs theme-transition ";
+                    if (theme === 'aero') input.classList.add('aero-input');
+                    else if (theme === 'material') input.classList.add('material-input');
+                    else if (theme === 'flat') input.classList.add('flat-input');
+                }
+            });
+
+            // Ajuste do Botão de Submit do Login
+            const submitBtn = document.querySelector('#screen-login form button');
+            if (submitBtn) {
+                submitBtn.className = "w-full py-3 text-xs tracking-wider theme-transition flex items-center justify-center gap-1 ";
+                if (theme === 'aero') submitBtn.classList.add('aero-btn');
+                else if (theme === 'material') submitBtn.classList.add('material-btn');
+                else if (theme === 'flat') submitBtn.classList.add('flat-btn');
+            }
+
+            // Ajuste do ícone do cadeado de segurança
+            const iconContainer = document.getElementById('login-icon-container');
+            const loginTitle = document.getElementById('login-header-title');
+            const loginSub = document.getElementById('login-header-sub');
+            const ssoLabel = document.getElementById('sso-label');
+
+            if (theme === 'aero') {
+                iconContainer.innerHTML = `
+                    <div class="aero-icon w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-indigo-600 border border-white/50 flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
+                        <i class="fa-solid fa-shield-halved text-white text-3xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></i>
+                    </div>`;
+                loginTitle.className = "text-2xl font-black aero-text-title tracking-tight";
+                loginTitle.textContent = "Acesso Seguro";
+                loginSub.className = "text-[11px] text-sky-200 mt-1";
+                loginSub.textContent = "Windows Secure Sign-in Portal";
+                ssoLabel.className = "bg-slate-900/50 text-white/60 px-2.5 py-0.5 rounded-full border border-white/10";
+            } else if (theme === 'material') {
+                iconContainer.innerHTML = `
+                    <div class="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg">
+                        <i class="fa-solid fa-lock text-white text-xl"></i>
+                    </div>`;
+                loginTitle.className = "text-xl font-bold text-slate-800";
+                loginTitle.textContent = "Área de Login";
+                loginSub.className = "text-[11px] text-slate-500 mt-1";
+                loginSub.textContent = "Conecte-se com sua conta escolar";
+                ssoLabel.className = "bg-slate-50 text-slate-500 px-2.5 py-0.5 rounded-full shadow-sm";
+            } else if (theme === 'flat') {
+                iconContainer.innerHTML = `
+                    <div class="w-12 h-12 border-3 border-black bg-black flex items-center justify-center">
+                        <i class="fa-solid fa-key text-white text-lg"></i>
+                    </div>`;
+                loginTitle.className = "text-2xl font-black text-black uppercase italic tracking-tighter";
+                loginTitle.textContent = "PORTAL ENTRAR";
+                loginSub.className = "text-[10px] text-black font-extrabold uppercase mt-1";
+                loginSub.textContent = "Nenhuma curva, sem frescura";
+                ssoLabel.className = "bg-white text-black font-black uppercase border-2 border-black px-2";
+            }
+
+            // Ajuste dos cards de previsão (Home)
+            const cards = document.querySelectorAll('.weather-card');
+            cards.forEach(card => {
+                card.className = "weather-card p-3.5 flex flex-col justify-between h-32 theme-transition ";
+                if (theme === 'aero') card.classList.add('aero-glass');
+                else if (theme === 'material') card.classList.add('material-card');
+                else if (theme === 'flat') card.classList.add('flat-card');
+            });
+        }
+
+        // Alterna a exibição da senha
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('input-password');
+            const eyeIcon = document.getElementById('password-eye-icon');
+            showPassword = !showPassword;
+
+            if (showPassword) {
+                pwdInput.type = "text";
+                eyeIcon.className = "fa-solid fa-eye-slash text-xs";
+            } else {
+                pwdInput.type = "password";
+                eyeIcon.className = "fa-solid fa-eye text-xs";
+            }
+        }
+
+        // Ação de envio do login
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const emailValue = document.getElementById('input-email').value;
+            
+            // Troca de tela com animação simples
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-home').classList.remove('hidden');
+
+            // Personaliza o cabeçalho do usuário
+            const baseUser = emailValue.split('@')[0];
+            document.getElementById('user-greeting').innerHTML = `<span>Olá, ${baseUser}</span> <i class="fa-solid fa-circle-check text-green-400 text-[10px]"></i>`;
+            
+            showCustomAlert('Login aprovado com sucesso!');
+        }
+
+        // Logout
+        function logout() {
+            document.getElementById('screen-home').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden');
+            document.getElementById('input-password').value = '';
+            showCustomAlert('Sessão encerrada.');
+        }
+
+        // Alerta Customizado sem travar o IFRAME (evita alert() do browser)
+        function showCustomAlert(message) {
+            const alertBox = document.getElementById('custom-alert');
+            const alertText = document.getElementById('alert-text');
+            
+            alertText.textContent = message;
+            alertBox.classList.remove('translate-y-24', 'opacity-0');
+            alertBox.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                alertBox.classList.remove('translate-y-0', 'opacity-100');
+                alertBox.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        // Garante a primeira adaptação de componentes no carregamento
+        window.onload = function() {
+            adaptComponentsForTheme('aero');
+        };
+    </script>
+</body>
+</html>
