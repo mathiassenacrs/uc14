@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Pixel Art Maker - 8-Bit</title>
+    <!-- Importação de fonte estilo Pixel Art / Retro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- Lucide Icons para deixar a interface intuitiva -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Reset de Estilos e Layout Geral */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        :root {
+            --bg-color: #1a1a24;
+            --panel-color: #262636;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --grid-line-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'VT323', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            font-size: 1.25rem;
+        }
+
+        /* Título Estilo Retro */
+        header {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-bottom: 4px solid var(--border-color);
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.6rem;
+            color: #facc15;
+            text-shadow: 3px 3px 0px #b45309;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
+
+        p.subtitle {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        /* Container Principal */
+        .app-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 1.5rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            flex: 1;
+        }
+
+        @media (max-width: 968px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Painel Lateral de Controle */
+        .control-panel {
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 3px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            height: fit-content;
+        }
+
+        .panel-section {
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 1.25rem;
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Configuração de Grade */
+        .grid-size-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        button {
+            font-family: 'VT323', monospace;
+            font-size: 1.25rem;
+            background-color: #374151;
+            border: 2px solid #4b5563;
+            color: var(--text-color);
+            padding: 0.4rem 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #4b5563;
+            border-color: #6b7280;
+        }
+
+        button.active {
+            background-color: var(--accent-color);
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .custom-size {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .custom-size input {
+            width: 70px;
+            background-color: #111827;
+            border: 2px solid var(--border-color);
+            color: white;
+            padding: 0.3rem;
+            border-radius: 6px;
+            text-align: center;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Seletor de Cores */
+        .color-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .color-preview-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-picker-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .color-hex {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: rgba(0,0,0,0.2);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            flex-grow: 1;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* Paleta 8-Bit Clássica */
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.4rem;
+        }
+
+        .palette-color {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s ease;
+        }
+
+        .palette-color:hover {
+            transform: scale(1.15);
+            z-index: 2;
+        }
+
+        .palette-color.selected {
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--accent-color);
+        }
+
+        /* Ferramentas de Desenho */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .tool-btn {
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            padding: 0.6rem;
+            justify-content: flex-start;
+        }
+
+        .tool-btn i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Configurações de Exibição e Ações */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            border-color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            border-color: #ef4444;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            border-color: #34d399;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+            padding: 0.8rem;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+            border-color: #10b981;
+        }
+
+        /* Área da Tela de Desenho (Canvas) */
+        .canvas-container {
+            background-color: var(--panel-color);
+            border-radius: 12px;
+            border: 3px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            overflow: auto;
+            min-height: 500px;
+        }
+
+        .pixel-board {
+            display: grid;
+            background-image: 
+                linear-gradient(45deg, #2b2b3c 25%, transparent 25%), 
+                linear-gradient(-45deg, #2b2b3c 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2b2b3c 75%), 
+                linear-gradient(-45deg, transparent 75%, #2b2b3c 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #20202e;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            max-height: 600px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            cursor: crosshair;
+            border: 4px solid #111827;
+        }
+
+        /* Elemento Pixel */
+        .pixel {
+            background-color: transparent;
+            transition: background-color 0.05s ease;
+        }
+
+        .pixel.with-grid {
+            border-right: 1px solid var(--grid-line-color);
+            border-bottom: 1px solid var(--grid-line-color);
+        }
+
+        /* Ajuda / Dica de uso */
+        .footer-info {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            border-top: 2px solid var(--border-color);
+            font-size: 1.2rem;
+        }
+
+        .footer-info span {
+            color: #facc15;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Retro Pixel Art Maker</h1>
+        <p class="subtitle">Seu simulador de Pixel Art 8-Bit favorito!</p>
+    </header>
+
+    <main class="app-container">
+        <!-- PAINEL DE CONTROLE LATERAL -->
+        <aside class="control-panel">
+            
+            <!-- SEÇÃO: Tamanho da Grade -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i data-lucide="grid-3x3"></i>
+                    <span>Tamanho da Grade</span>
+                </div>
+                <div class="grid-size-controls">
+                    <div class="preset-buttons">
+                        <button type="button" class="preset-btn" data-size="8">8x8</button>
+                        <button type="button" class="preset-btn active" data-size="16">16x16</button>
+                        <button type="button" class="preset-btn" data-size="32">32x32</button>
+                        <button type="button" class="preset-btn" data-size="64">64x64</button>
+                    </div>
+                    <div class="custom-size">
+                        <span>Personalizado:</span>
+                        <input type="number" id="customWidth" min="4" max="100" value="16">
+                        <span>x</span>
+                        <input type="number" id="customHeight" min="4" max="100" value="16">
+                        <button type="button" id="btnApplyCustom" style="padding: 0.3rem 0.6rem;">OK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: Seletor de Cores -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i data-lucide="palette"></i>
+                    <span>Cor Atual</span>
+                </div>
+                <div class="color-selector">
+                    <div class="color-preview-container">
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="colorPicker" value="#e52521">
+                        </div>
+                        <div class="color-hex" id="colorHex">#E52521</div>
+                    </div>
+                    
+                    <span style="font-size: 1.1rem; color: var(--text-muted);">Paleta Clássica NES (8-Bit):</span>
+                    <div class="palette-grid" id="paletteGrid">
+                        <!-- Gerado Dinamicamente por JS para cores retrô marcantes -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: Ferramentas -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i data-lucide="wrench"></i>
+                    <span>Ferramentas</span>
+                </div>
+                <div class="tools-grid">
+                    <button class="tool-btn active" id="toolPencil" data-tool="pencil">
+                        <i data-lucide="pencil"></i>Lápis
+                    </button>
+                    <button class="tool-btn" id="toolEraser" data-tool="eraser">
+                        <i data-lucide="eraser"></i>Borracha
+                    </button>
+                    <button class="tool-btn" id="toolBucket" data-tool="bucket">
+                        <i data-lucide="paint-bucket"></i>Preencher
+                    </button>
+                    <button class="tool-btn" id="toolPicker" data-tool="picker">
+                        <i data-lucide="pipette"></i>Pipeta
+                    </button>
+                </div>
+            </div>
+
+            <!-- SEÇÃO: Exibição & Ações -->
+            <div class="panel-section">
+                <div class="action-buttons">
+                    <button type="button" id="toggleGridBtn" class="active">
+                        <i data-lucide="grid"></i> Grade: Ligada
+                    </button>
+                    <button type="button" id="clearBtn" class="btn-danger">
+                        <i data-lucide="trash-2"></i> Limpar Tudo
+                    </button>
+                    <button type="button" id="downloadBtn" class="btn-success">
+                        <i data-lucide="download"></i> EXPORTAR
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- ÁREA CENTRAL DE DESENHO (GRID) -->
+        <section class="canvas-container">
+            <div class="pixel-board" id="pixelBoard"></div>
+        </section>
+    </main>
+
+    <footer class="footer-info">
+        <p>Desenhe o <span>SUPER MARIO</span> com 16x16! Clique e arraste para colorir.</p>
+    </footer>
+
+    <script>
+        // CONFIGURAÇÃO INICIAL DE ESTADO DO SISTEMA
+        const state = {
+            width: 16,
+            height: 16,
+            currentColor: '#e52521', // Vermelho Clássico do Mario
+            currentTool: 'pencil',   // pencil, eraser, bucket, picker
+            isDrawing: false,
+            showGrid: true,
+            // Paleta retro icônica de 8 bits
+            palette: [
+                '#000000', '#ffffff', '#7c7c7c', '#bcbcbc', // Neutros
+                '#e52521', '#b81e14', '#f83800', '#f4cca1', // Vermelhos, Laranja e Tons de Pele (Mario)
+                '#002fa7', '#0058f8', '#3cbcfc', '#00b800', // Azuis e Verdes
+                '#fcd116', '#f8b800', '#f878f8', '#a80020', // Amarelos, Rosas e Vinhos
+                '#b87333', '#804000', '#503000', '#241800'  // Marrons clássicos do cabelo/sapato do Mario
+            ]
+        };
+
+        // ELEMENTOS DO DOM
+        const board = document.getElementById('pixelBoard');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorHex = document.getElementById('colorHex');
+        const paletteGrid = document.getElementById('paletteGrid');
+        
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        const customWidthInput = document.getElementById('customWidth');
+        const customHeightInput = document.getElementById('customHeight');
+        const btnApplyCustom = document.getElementById('btnApplyCustom');
+        
+        const toolBtns = document.querySelectorAll('.tool-btn');
+        const toggleGridBtn = document.getElementById('toggleGridBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // INICIALIZAÇÃO DO APP
+        function initApp() {
+            lucide.createIcons();
+            buildPalette();
+            buildBoard();
+            setupEventListeners();
+        }
+
+        // CONSTRUIR A GRADE DE CORES DA PALETA
+        function buildPalette() {
+            paletteGrid.innerHTML = '';
+            state.palette.forEach(color => {
+                const colorDiv = document.createElement('div');
+                colorDiv.className = 'palette-color';
+                colorDiv.style.backgroundColor = color;
+                
+                if (color.toLowerCase() === state.currentColor.toLowerCase()) {
+                    colorDiv.classList.add('selected');
+                }
+
+                colorDiv.addEventListener('click', () => {
+                    updateCurrentColor(color);
+                });
+
+                paletteGrid.appendChild(colorDiv);
+            });
+        }
+
+        // CONSTRUIR A GRADE DE DESENHO
+        function buildBoard() {
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${state.width}, 1fr)`;
+            board.style.gridTemplateRows = `repeat(${state.height}, 1fr)`;
+
+            const totalPixels = state.width * state.height;
+
+            for (let i = 0; i < totalPixels; i++) {
+                const pixel = document.createElement('div');
+                pixel.className = 'pixel';
+                
+                // Configuração da grade visível
+                if (state.showGrid) {
+                    pixel.classList.add('with-grid');
+                }
+
+                // Eventos do Mouse (Desktop)
+                pixel.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    state.isDrawing = true;
+                    applyTool(pixel);
+                });
+
+                pixel.addEventListener('mouseenter', () => {
+                    if (state.isDrawing) {
+                        applyTool(pixel);
+                    }
+                });
+
+                // Suporte para Dispositivos Móveis (Toque na Tela)
+                pixel.addEventListener('touchstart', (e) => {
+                    state.isDrawing = true;
+                    applyTool(pixel);
+                }, { passive: true });
+
+                board.appendChild(pixel);
+            }
+        }
+
+        // PARAR DESENHO AO SOLTAR O MOUSE
+        window.addEventListener('mouseup', () => {
+            state.isDrawing = false;
+        });
+
+        // Evento especial de arrastar em Mobile (Simulação de MouseEnter com Toque)
+        board.addEventListener('touchmove', (e) => {
+            if (!state.isDrawing) return;
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (element && element.classList.contains('pixel')) {
+                applyTool(element);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            state.isDrawing = false;
+        });
+
+        // APLICAR A FERRAMENTA SELECIONADA NO PIXEL CLICADO
+        function applyTool(pixel) {
+            const index = Array.from(board.children).indexOf(pixel);
+            
+            switch (state.currentTool) {
+                case 'pencil':
+                    pixel.style.backgroundColor = state.currentColor;
+                    break;
+                case 'eraser':
+                    pixel.style.backgroundColor = 'transparent';
+                    break;
+                case 'picker':
+                    const pixelColor = pixel.style.backgroundColor;
+                    if (pixelColor) {
+                        // Conversão de rgb para hex para unificação
+                        const hex = rgbToHex(pixelColor);
+                        updateCurrentColor(hex);
+                    } else {
+                        updateCurrentColor('#ffffff'); // Default se for transparente
+                    }
+                    // Retornar automaticamente para o Lápis depois de pegar a cor
+                    selectTool('pencil');
+                    break;
+                case 'bucket':
+                    const targetColor = pixel.style.backgroundColor || 'transparent';
+                    fillArea(index, targetColor, state.currentColor);
+                    break;
+            }
+        }
+
+        // ALGORITMO FLOOD-FILL (BALDE DE TINTA)
+        function fillArea(startIndex, targetColor, replacementColor) {
+            // Se a cor selecionada for igual ao destino de substituição, encerra para evitar loop infinito
+            if (isSameColor(targetColor, replacementColor)) return;
+
+            const pixels = Array.from(board.children);
+            const queue = [startIndex];
+            const visited = new Set();
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (visited.has(current)) continue;
+                visited.add(current);
+
+                const pixel = pixels[current];
+                const currentColor = pixel.style.backgroundColor || 'transparent';
+
+                if (isSameColor(currentColor, targetColor)) {
+                    pixel.style.backgroundColor = replacementColor === 'transparent' ? '' : replacementColor;
+
+                    const row = Math.floor(current / state.width);
+                    const col = current % state.width;
+
+                    // Vizinho de Cima
+                    if (row > 0) queue.push(current - state.width);
+                    // Vizinho de Baixo
+                    if (row < state.height - 1) queue.push(current + state.width);
+                    // Vizinho da Esquerda
+                    if (col > 0) queue.push(current - 1);
+                    // Vizinho da Direita
+                    if (col < state.width - 1) queue.push(current + 1);
+                }
+            }
+        }
+
+        // AUXILIAR: Comparar strings de cores flexíveis (RGBA, RGB, Hex, transparente)
+        function isSameColor(colorA, colorB) {
+            if (colorA === colorB) return true;
+            
+            // Caso ambas sejam transparentes por falta de valor preenchido
+            const isEmptyA = !colorA || colorA === 'transparent' || colorA === 'rgba(0, 0, 0, 0)';
+            const isEmptyB = !colorB || colorB === 'transparent' || colorB === 'rgba(0, 0, 0, 0)';
+            if (isEmptyA && isEmptyB) return true;
+            if (isEmptyA || isEmptyB) return false;
+
+            return rgbToHex(colorA).toLowerCase() === rgbToHex(colorB).toLowerCase();
+        }
+
+        // AUXILIAR: Conversor de Cor RGB para Hexadecimal
+        function rgbToHex(rgbStr) {
+            if (rgbStr.startsWith('#')) return rgbStr;
+            const matches = rgbStr.match(/\d+/g);
+            if (!matches) return '#000000';
+            const r = parseInt(matches[0]);
+            const g = parseInt(matches[1]);
+            const b = parseInt(matches[2]);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        // ATUALIZAR COR SELECIONADA NO APP E NA INTERFACE
+        function updateCurrentColor(newColor) {
+            state.currentColor = newColor;
+            colorPicker.value = rgbToHex(newColor);
+            colorHex.textContent = rgbToHex(newColor).toUpperCase();
+
+            // Atualiza status ativo na paleta de cores rápida
+            document.querySelectorAll('.palette-color').forEach(div => {
+                const divBgHex = rgbToHex(div.style.backgroundColor);
+                if (divBgHex.toLowerCase() === newColor.toLowerCase()) {
+                    div.classList.add('selected');
+                } else {
+                    div.classList.remove('selected');
+                }
+            });
+        }
+
+        // MUDAR SELEÇÃO DE FERRAMENTA ATIVA
+        function selectTool(toolName) {
+            state.currentTool = toolName;
+            toolBtns.forEach(btn => {
+                if (btn.dataset.tool === toolName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // GERENCIAR TODOS OS EVENT LISTENERS DO APP
+        function setupEventListeners() {
+            // Picker de cor direta
+            colorPicker.addEventListener('input', (e) => {
+                updateCurrentColor(e.target.value);
+            });
+
+            // Clique nas Ferramentas
+            toolBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectTool(btn.dataset.tool);
+                });
+            });
+
+            // Presets de Tamanho da Grade
+            presetBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    presetBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    const newSize = parseInt(btn.dataset.size);
+                    state.width = newSize;
+                    state.height = newSize;
+                    customWidthInput.value = newSize;
+                    customHeightInput.value = newSize;
+                    buildBoard();
+                });
+            });
+
+            // Aplicar Tamanho Customizado
+            btnApplyCustom.addEventListener('click', () => {
+                presetBtns.forEach(b => b.classList.remove('active'));
+                
+                let w = parseInt(customWidthInput.value);
+                let h = parseInt(customHeightInput.value);
+
+                // Forçar limites razoáveis de processamento
+                w = Math.max(4, Math.min(100, w));
+                h = Math.max(4, Math.min(100, h));
+
+                customWidthInput.value = w;
+                customHeightInput.value = h;
+
+                state.width = w;
+                state.height = h;
+                buildBoard();
+            });
+
+            // Ativar / Desativar Grade Visível
+            toggleGridBtn.addEventListener('click', () => {
+                state.showGrid = !state.showGrid;
+                
+                if (state.showGrid) {
+                    toggleGridBtn.classList.add('active');
+                    toggleGridBtn.innerHTML = '<i data-lucide="grid"></i> Grade: Ligada';
+                } else {
+                    toggleGridBtn.classList.remove('active');
+                    toggleGridBtn.innerHTML = '<i data-lucide="grid"></i> Grade: Desligada';
+                }
+                
+                document.querySelectorAll('.pixel').forEach(pixel => {
+                    if (state.showGrid) {
+                        pixel.classList.add('with-grid');
+                    } else {
+                        pixel.classList.remove('with-grid');
+                    }
+                });
+                lucide.createIcons();
+            });
+
+            // Limpar Todo o Quadro de Desenho
+            clearBtn.addEventListener('click', () => {
+                document.querySelectorAll('.pixel').forEach(pixel => {
+                    pixel.style.backgroundColor = 'transparent';
+                });
+            });
+
+            // EXPORTAR COMO PNG REAL
+            downloadBtn.addEventListener('click', exportToPNG);
+        }
+
+        // GERAR IMAGEM PNG COM MULTIPLICAÇÃO DE ESCALA (Para evitar borrão de redimensionamento)
+        function exportToPNG() {
+            const pixels = Array.from(board.children);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Fator de escala para a arte não ficar minúscula na galeria (Ex: 1 pixel de arte vira 16 pixels na imagem final)
+            const scale = 16; 
+            canvas.width = state.width * scale;
+            canvas.height = state.height * scale;
+
+            // Preenche o canvas pixel por pixel com a escala definida
+            for (let y = 0; y < state.height; y++) {
+                for (let x = 0; x < state.width; x++) {
+                    const idx = (y * state.width) + x;
+                    const pixel = pixels[idx];
+                    const color = pixel.style.backgroundColor;
+
+                    if (color && color !== 'transparent') {
+                        ctx.fillStyle = color;
+                        // Preenche um quadrado grande correspondente ao pixel de escala
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                    } else {
+                        // Deixa transparente o fundo onde não foi desenhado
+                        ctx.clearRect(x * scale, y * scale, scale, scale);
+                    }
+                }
+            }
+
+            // Cria o link de download da imagem exportada
+            const link = document.createElement('a');
+            link.download = `pixel-art-${state.width}x${state.height}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Rodar ao iniciar página
+        window.onload = initApp;
+    </script>
+</body>
+</html>

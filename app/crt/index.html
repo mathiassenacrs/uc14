@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Como Funciona a TV de Tubo (CRT) - Simulador Interativo</title>
+    <!-- Tailwind CSS para estilização moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones amigáveis -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap');
+        
+        .retro-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+        .modern-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Efeito de Scanline na tela simulada */
+        .scanlines {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen modern-font flex flex-col justify-between">
+
+    <!-- Cabeçalho -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur p-4">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-600 p-2.5 rounded-lg shadow-lg shadow-red-900/30 animate-pulse">
+                    <i class="fa-solid fa-tv text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-red-500 via-green-400 to-blue-500 bg-clip-text text-transparent">LABORATÓRIO CRT</h1>
+                    <p class="text-xs text-slate-400">Entenda os Canhões, a Máscara e os Fósforos lado a lado</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+                <span class="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></span>
+                <span class="text-xs font-semibold text-slate-300">Modo Interativo Ativo</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-6xl w-full mx-auto p-4 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUNA ESQUERDA: Controles e explicações conceituais (4 cols) -->
+        <section class="lg:col-span-4 flex flex-col gap-5">
+            
+            <!-- Painel de Abas -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-lg font-bold mb-3 text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i> Escolha o Modo de Simulação
+                </h2>
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button id="btn-tab-micro" class="py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg shadow-indigo-950" onclick="switchTab('micro')">
+                        <i class="fa-solid fa-microscope text-lg"></i>
+                        <span>1. Visão Micro (Pós)</span>
+                    </button>
+                    <button id="btn-tab-macro" class="py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300" onclick="switchTab('macro')">
+                        <i class="fa-solid fa-arrows-spin text-lg"></i>
+                        <span>2. Varredura (Tubo)</span>
+                    </button>
+                </div>
+
+                <!-- Painel de Controle de Tensão (Exclusivo Aba Micro) -->
+                <div id="controls-micro" class="space-y-4">
+                    <div class="border-t border-slate-800 pt-3">
+                        <h3 class="text-sm font-semibold text-slate-300 mb-2 flex justify-between">
+                            <span>Tensão nos Canhões (Voltagem)</span>
+                            <span class="text-xs text-slate-400 font-normal">Ajuste e veja a mistura</span>
+                        </h3>
+                        
+                        <!-- Slider Vermelho -->
+                        <div class="space-y-1 mb-3">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-red-400 font-bold"><i class="fa-solid fa-bolt mr-1"></i>Canhão R (Vermelho)</span>
+                                <span id="val-r" class="font-mono bg-red-950/50 text-red-400 px-1.5 py-0.5 rounded border border-red-900/30">100%</span>
+                            </div>
+                            <input id="slide-r" type="range" min="0" max="100" value="100" class="w-full accent-red-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer" oninput="updateVoltage()">
+                        </div>
+
+                        <!-- Slider Verde -->
+                        <div class="space-y-1 mb-3">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-green-400 font-bold"><i class="fa-solid fa-bolt mr-1"></i>Canhão G (Verde)</span>
+                                <span id="val-g" class="font-mono bg-green-950/50 text-green-400 px-1.5 py-0.5 rounded border border-green-900/30">100%</span>
+                            </div>
+                            <input id="slide-g" type="range" min="0" max="100" value="80" class="w-full accent-green-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer" oninput="updateVoltage()">
+                        </div>
+
+                        <!-- Slider Azul -->
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-blue-400 font-bold"><i class="fa-solid fa-bolt mr-1"></i>Canhão B (Azul)</span>
+                                <span id="val-b" class="font-mono bg-blue-950/50 text-blue-400 px-1.5 py-0.5 rounded border border-blue-900/30">0%</span>
+                            </div>
+                            <input id="slide-b" type="range" min="0" max="100" value="0" class="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer" oninput="updateVoltage()">
+                        </div>
+                    </div>
+
+                    <!-- Botões de Predefinição de Cor -->
+                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80">
+                        <span class="text-xs text-slate-400 font-medium block mb-2">Predefinições de Cor (Mario):</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <button class="bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 py-1.5 rounded-lg text-red-200 transition" onclick="setPreset(100, 0, 0, 'Vermelho Mario')">🟥 Vermelho Mario</button>
+                            <button class="bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 py-1.5 rounded-lg text-yellow-200 transition" onclick="setPreset(100, 80, 0, 'Pele do Mario')">🟧 Pele do Mario</button>
+                            <button class="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 py-1.5 rounded-lg text-blue-200 transition" onclick="setPreset(0, 30, 100, 'Céu Azul')">🟦 Céu Azul-Celeste</button>
+                            <button class="bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/30 py-1.5 rounded-lg text-slate-200 transition" onclick="setPreset(100, 100, 100, 'Branco Puro')">⬜ Branco Puro</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel de Controle de Varredura (Exclusivo Aba Macro) -->
+                <div id="controls-macro" class="space-y-4 hidden">
+                    <div class="border-t border-slate-800 pt-3 space-y-3">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 block mb-1">Velocidade da Varredura (Redesenho):</span>
+                            <div class="grid grid-cols-3 gap-1.5 text-xs">
+                                <button id="btn-speed-slow" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-slate-300 font-medium transition" onclick="setScanSpeed('slow')">Câmera Lenta</button>
+                                <button id="btn-speed-normal" class="bg-indigo-600 border border-indigo-500 py-2 rounded-lg text-white font-medium transition shadow-sm" onclick="setScanSpeed('normal')">Normal</button>
+                                <button id="btn-speed-fast" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 py-2 rounded-lg text-slate-300 font-medium transition" onclick="setScanSpeed('fast')">Instantâneo</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
+                            <span class="text-xs text-slate-400 font-medium block">O que está acontecendo aqui?</span>
+                            <p class="text-[11px] leading-relaxed text-slate-300">
+                                Para desenhar o Mario, o canhão de elétrons faz linhas horizontais sequenciais de cima para baixo. Em velocidade normal, seu olho não percebe as linhas se formando, mas sim o desenho montado!
+                            </p>
+                        </div>
+
+                        <!-- Botão de Reinício da Varredura -->
+                        <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 transition" onclick="resetScanLine()">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> REINICIAR VARREDURA (SCAN)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box Informativo Dinâmico -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex-grow">
+                <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-blue-400"></i> Cadê as Três Camadas?
+                </h3>
+                <div class="space-y-2.5 text-xs text-slate-300 leading-relaxed">
+                    <p>
+                        Muitos acreditam que as TVs coloridas tinham 3 camadas completas de pó sobrepostas. <strong>Isso é um mito!</strong>
+                    </p>
+                    <p>
+                        Se tivessem, uma camada tamparia a luz da outra. Em vez disso, como você pode ver no simulador ao lado, os <strong>três pós coloridos (fósforos) estão espremidos lado a lado</strong> na mesma camada de vidro.
+                    </p>
+                    <p class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 text-slate-400">
+                        <strong class="text-blue-400">A ilusão da cor:</strong> Como cada círculo de fósforo é menor que 1 milímetro, seu olho de longe mistura o brilho de um fósforo com o vizinho, enganando o cérebro!
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COLUNA DIREITA: Área de Exibição do Simulador (8 cols) -->
+        <section class="lg:col-span-8 flex flex-col gap-4">
+            
+            <!-- Canvas Interativo -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col items-center">
+                <div class="w-full flex justify-between items-center mb-3">
+                    <span id="screen-title" class="text-xs font-mono text-emerald-400 uppercase tracking-widest bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-900/40 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye animate-pulse"></i> 1. Vista Microscópica (Tríades de Fósforo)
+                    </span>
+                    <span id="preset-lbl" class="text-xs font-semibold text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">Cores do Mario</span>
+                </div>
+
+                <!-- Container do Canvas Principal -->
+                <div class="relative w-full max-w-full overflow-hidden rounded-xl bg-black border-2 border-slate-800 flex justify-center items-center p-1 scanlines">
+                    <canvas id="crtCanvas" class="w-full h-auto aspect-[4/3] max-h-[500px]" width="800" height="600"></canvas>
+                </div>
+
+                <!-- Painel Explicativo sob o Canvas (muda conforme a aba) -->
+                <div id="footer-micro" class="w-full mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs border-t border-slate-800 pt-3">
+                    <div class="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                        <span class="font-bold text-red-400 block mb-1">📐 1. Ângulo de Entrada</span>
+                        <p class="text-slate-400 leading-snug">Os canhões estão desalinhados de propósito para que cada feixe cruze a máscara no ângulo exato do seu fósforo correspondente.</p>
+                    </div>
+                    <div class="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                        <span class="font-bold text-green-400 block mb-1">🏁 2. Máscara de Sombra</span>
+                        <p class="text-slate-400 leading-snug">A máscara impede que o elétron de um canhão "vaze" e acerte o fósforo errado, o que destruiria a pureza da cor gerada.</p>
+                    </div>
+                    <div class="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                        <span class="font-bold text-blue-400 block mb-1">👁️ 3. Distorção Óptica</span>
+                        <p class="text-slate-400 leading-snug">Nenhum "pixel" do Mario é perfeitamente quadrado ou puro. A imagem ganha charme devido à mesclagem física destes fósforos.</p>
+                    </div>
+                </div>
+
+                <div id="footer-macro" class="w-full mt-4 hidden grid grid-cols-1 md:grid-cols-2 gap-3 text-xs border-t border-slate-800 pt-3">
+                    <div class="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 flex gap-2">
+                        <span class="text-2xl">📺</span>
+                        <div>
+                            <span class="font-bold text-indigo-400 block mb-1">A Varredura de Elétrons (Scanline)</span>
+                            <p class="text-slate-400 leading-snug">Ao contrário do LCD onde tudo se atualiza de uma vez, aqui as imagens são "desenhadas" por uma linha que corre de cima a baixo em microssegundos.</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60 flex gap-2">
+                        <span class="text-2xl">⚡</span>
+                        <div>
+                            <span class="font-bold text-amber-400 block mb-1">Sincronização Horizontal/Vertical</span>
+                            <p class="text-slate-400 leading-snug">É o famoso sinal "VSYNC" e "HSYNC". Se os pulsos de sincronização elétricos do Nintendinho falhassem, a imagem da TV de tubo saía rolando sem parar!</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+        </section>
+        
+    </main>
+
+    <!-- Rodapé explicativo -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-3 px-4 text-center text-xs text-slate-500">
+        <p>Desenvolvido para fins didáticos. O Mario de 8-bits usava paletas analógicas geradas por ondas senoidais transmitidas via sinal de TV RF/RCA.</p>
+    </footer>
+
+    <!-- Lógica de Simulação JavaScript -->
+    <script>
+        const canvas = document.getElementById('crtCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Estado global da simulação
+        let activeTab = 'micro'; // 'micro' ou 'macro'
+        let voltageR = 100;
+        let voltageG = 80;
+        let voltageB = 0;
+        let currentPresetName = "Amarelo/Pele do Mario";
+
+        // Parâmetros de varredura (Aba Macro)
+        let scanSpeed = 'normal'; // 'slow', 'normal', 'fast'
+        let scanLineY = 0;
+        let animationFrameId = null;
+
+        // Representação simplificada do Mario de 8 bits para desenhar na varredura
+        // 0 = transparente/fundo, 1 = Pele/Amarelo, 2 = Vermelho (chapéu/roupa), 3 = Marrom (cabelo/olho/sapato)
+        const marioSprite = [
+            [0,0,0,2,2,2,2,2,0,0,0,0],
+            [0,0,2,2,2,2,2,2,2,2,2,0],
+            [0,0,3,3,3,1,1,3,1,0,0,0],
+            [0,3,1,3,1,1,1,3,1,1,1,0],
+            [0,3,1,3,3,1,1,1,3,1,1,1],
+            [0,3,3,1,1,1,1,3,3,3,3,0],
+            [0,0,0,1,1,1,1,1,1,1,0,0],
+            [0,0,2,2,2,3,2,2,2,0,0,0],
+            [0,2,2,2,2,3,2,2,3,2,2,0],
+            [2,2,2,2,2,3,3,3,3,2,2,2],
+            [1,1,2,2,2,3,1,2,1,2,2,1],
+            [1,1,1,2,2,2,2,2,2,2,1,1],
+            [1,1,2,2,2,2,2,2,2,2,1,1],
+            [0,0,2,2,2,0,0,2,2,2,0,0],
+            [0,3,3,3,0,0,0,0,3,3,3,0],
+            [3,3,3,3,0,0,0,0,3,3,3,3]
+        ];
+
+        // Mapeamento de Cores do Mario (Paleta Analógica do NES convertida para simulação)
+        const colorPalette = {
+            0: { r: 0,   g: 40,  b: 120 }, // Fundo azul escuro clássico do NES
+            1: { r: 248, g: 184, b: 0   }, // Pele pêssego/amarelada
+            2: { r: 216, g: 40,  b: 0   }, // Vermelho do chapéu e macacão
+            3: { r: 104, g: 68,  b: 0   }  // Marrom do cabelo/detalhes
+        };
+
+        // Redimensionar e inicializar canvas
+        function init() {
+            updateVoltageDisplay();
+            startLoop();
+        }
+
+        function updateVoltage() {
+            voltageR = parseInt(document.getElementById('slide-r').value);
+            voltageG = parseInt(document.getElementById('slide-g').value);
+            voltageB = parseInt(document.getElementById('slide-b').value);
+            currentPresetName = "Customizado";
+            document.getElementById('preset-lbl').innerText = currentPresetName;
+            updateVoltageDisplay();
+        }
+
+        function updateVoltageDisplay() {
+            document.getElementById('val-r').innerText = voltageR + '%';
+            document.getElementById('val-g').innerText = voltageG + '%';
+            document.getElementById('val-b').innerText = voltageB + '%';
+        }
+
+        function setPreset(r, g, b, name) {
+            voltageR = r;
+            voltageG = g;
+            voltageB = b;
+            
+            document.getElementById('slide-r').value = r;
+            document.getElementById('slide-g').value = g;
+            document.getElementById('slide-b').value = b;
+            
+            currentPresetName = name;
+            document.getElementById('preset-lbl').innerText = name;
+            updateVoltageDisplay();
+        }
+
+        function setScanSpeed(speed) {
+            scanSpeed = speed;
+            
+            // Gerenciar classes visuais dos botões de velocidade
+            ['slow', 'normal', 'fast'].forEach(s => {
+                const btn = document.getElementById('btn-speed-' + s);
+                if (s === speed) {
+                    btn.classList.remove('bg-slate-800', 'text-slate-300', 'hover:bg-slate-700', 'border-slate-700');
+                    btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-500', 'shadow-sm');
+                } else {
+                    btn.classList.add('bg-slate-800', 'text-slate-300', 'hover:bg-slate-700', 'border-slate-700');
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-500', 'shadow-sm');
+                }
+            });
+        }
+
+        function resetScanLine() {
+            scanLineY = 0;
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            // Elementos das abas
+            const btnMicro = document.getElementById('btn-tab-micro');
+            const btnMacro = document.getElementById('btn-tab-macro');
+            const panelMicro = document.getElementById('controls-micro');
+            const panelMacro = document.getElementById('controls-macro');
+            const footerMicro = document.getElementById('footer-micro');
+            const footerMacro = document.getElementById('footer-macro');
+            const screenTitle = document.getElementById('screen-title');
+
+            if (tab === 'micro') {
+                btnMicro.className = "py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg shadow-indigo-950";
+                btnMacro.className = "py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300";
+                
+                panelMicro.classList.remove('hidden');
+                panelMacro.classList.add('hidden');
+                footerMicro.classList.remove('hidden');
+                footerMacro.classList.add('hidden');
+                screenTitle.innerHTML = '<i class="fa-solid fa-bullseye animate-pulse"></i> 1. Vista Microscópica (Tríades de Fósforo)';
+                document.getElementById('preset-lbl').innerText = currentPresetName;
+            } else {
+                btnMacro.className = "py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-600 to-violet-700 text-white shadow-lg shadow-indigo-950";
+                btnMicro.className = "py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-300 flex flex-col items-center justify-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-300";
+                
+                panelMacro.classList.remove('hidden');
+                panelMicro.classList.add('hidden');
+                footerMacro.classList.remove('hidden');
+                footerMicro.classList.add('hidden');
+                screenTitle.innerHTML = '<i class="fa-solid fa-arrows-spin animate-spin-slow"></i> 2. Atualização e Varredura da Tela (Scan)';
+                document.getElementById('preset-lbl').innerText = "Mario 8-Bits Ativo";
+            }
+        }
+
+        // --- Motores de Renderização do Canvas ---
+
+        function drawMicroView() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#09090e";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Desenhar representação mecânica dos 3 canhões traseiros
+            drawElectronGuns();
+
+            // 2. Desenhar as linhas de feixe viajando até a máscara de sombra
+            drawElectronBeams();
+
+            // 3. Desenhar a Máscara de Sombra (Placa de metal)
+            drawShadowMask();
+
+            // 4. Desenhar os pontos de fósforo no painel frontal de vidro
+            drawPhosphorGrid();
+        }
+
+        function drawElectronGuns() {
+            // Desenhar canhões de elétrons (lado esquerdo)
+            const gunX = 60;
+            const gunYCenters = [150, 300, 450]; // R, G, B respectivamente
+            const gunColors = ["#ef4444", "#22c55e", "#3b82f6"];
+            const gunLabels = ["Canhão R (Vermelho)", "Canhão G (Verde)", "Canhão B (Azul)"];
+            const gunVoltages = [voltageR, voltageG, voltageB];
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = "#334155";
+            
+            // Base metálica geral dos canhões
+            ctx.fillStyle = "#1e293b";
+            ctx.beginPath();
+            ctx.rect(10, 80, 40, 440);
+            ctx.fill();
+            ctx.stroke();
+
+            for (let i = 0; i < 3; i++) {
+                const cy = gunYCenters[i];
+                
+                // Desenhar cilindro físico do cátodo
+                ctx.fillStyle = "#475569";
+                ctx.beginPath();
+                ctx.rect(gunX - 20, cy - 25, 40, 50);
+                ctx.fill();
+                ctx.stroke();
+
+                // Desenhar filamento de brilho de calor interno do canhão (proporcional à tensão ativa)
+                const glowIntensity = Math.floor((gunVoltages[i] / 100) * 155) + 100; // 100 a 255
+                ctx.fillStyle = `rgb(${glowIntensity}, ${i===1?glowIntensity:20}, ${i===2?glowIntensity:20})`;
+                ctx.shadowColor = gunColors[i];
+                ctx.shadowBlur = gunVoltages[i] > 10 ? 15 : 0;
+                
+                ctx.beginPath();
+                ctx.arc(gunX + 10, cy, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Desligar sombras para otimizar
+                ctx.shadowBlur = 0;
+
+                // Indicação de Voltagem ativa
+                ctx.fillStyle = "#94a3b8";
+                ctx.font = "bold 10px monospace";
+                ctx.fillText(gunLabels[i], gunX - 45, cy - 35);
+                ctx.fillStyle = gunColors[i];
+                ctx.fillText(`Voltagem: ${gunVoltages[i]}%`, gunX - 45, cy + 38);
+            }
+        }
+
+        function drawElectronBeams() {
+            const gunX = 70;
+            const gunYCenters = [150, 300, 450];
+            const maskTargetX = 420;
+            const maskHoleY = 300; // Todos cruzam no buraquinho central da máscara para separar pelo ângulo!
+            
+            const voltages = [voltageR, voltageG, voltageB];
+            const baseColors = [
+                `rgba(255, 60, 60, `, 
+                `rgba(60, 255, 60, `, 
+                `rgba(60, 120, 255, `
+            ];
+
+            // Linhas de trajetória de elétrons convergindo na máscara
+            for (let i = 0; i < 3; i++) {
+                if (voltages[i] <= 0) continue;
+
+                const startY = gunYCenters[i];
+                const opacity = (voltages[i] / 100) * 0.75;
+
+                ctx.strokeStyle = baseColors[i] + opacity + ")";
+                ctx.lineWidth = 4 + (voltages[i] / 100) * 6; // O feixe fica mais grosso se houver mais tensão!
+                
+                ctx.beginPath();
+                ctx.moveTo(gunX, startY);
+                // Convergência até o furo central da máscara de sombra
+                ctx.lineTo(maskTargetX, maskHoleY);
+                ctx.stroke();
+
+                // Desenhar feixes secundários após cruzar a máscara de sombra, atingindo os respectivos fósforos
+                // O ângulo faz com que eles se separem após cruzar o furo
+                const targetFosforoY = maskHoleY + (maskHoleY - startY) * 0.8;
+                ctx.beginPath();
+                ctx.moveTo(maskTargetX, maskHoleY);
+                ctx.lineTo(600, targetFosforoY);
+                ctx.stroke();
+            }
+        }
+
+        function drawShadowMask() {
+            const maskX = 420;
+            ctx.fillStyle = "#0f172a";
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 3;
+
+            // Placa da Máscara de Sombra
+            ctx.beginPath();
+            ctx.rect(maskX - 10, 50, 20, 500);
+            ctx.fill();
+            ctx.stroke();
+
+            // O buraquinho microscópico onde os feixes se cruzam
+            ctx.fillStyle = "#000000";
+            ctx.beginPath();
+            ctx.arc(maskX, 300, 22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#38bdf8";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Texto explicativo da Máscara
+            ctx.fillStyle = "#38bdf8";
+            ctx.font = "bold 9px monospace";
+            ctx.fillText("MÁSCARA DE SOMBRA", maskX - 45, 45);
+            ctx.fillText("(Furo de Seleção)", maskX - 43, 335);
+        }
+
+        function drawPhosphorGrid() {
+            // Vidro frontal onde estão os pós depositados (Lado Direito)
+            const targetX = 600;
+            const targetYCenters = [420, 300, 180]; // R, G, B (Inverte a ordem por causa do cruzamento de ângulo!)
+            const targetColors = ["#dc2626", "#16a34a", "#2563eb"];
+            const targetLightColors = ["#ff7373", "#6bff84", "#7da6ff"];
+            const voltages = [voltageR, voltageG, voltageB];
+            const labels = ["FÓSFORO VERMELHO", "FÓSFORO VERDE", "FÓSFORO AZUL"];
+
+            // Estrutura física do vidro da tela
+            ctx.fillStyle = "#020617";
+            ctx.strokeStyle = "#334155";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.rect(targetX - 25, 40, 180, 520);
+            ctx.fill();
+            ctx.stroke();
+
+            // Desenhar os 3 pontos de pó principais que estão espremidos juntos
+            for (let i = 0; i < 3; i++) {
+                const cy = targetYCenters[i];
+                const volt = voltages[i];
+
+                // Desenhar borda de suporte do fósforo
+                ctx.fillStyle = "#0f172a";
+                ctx.beginPath();
+                ctx.arc(targetX + 60, cy, 55, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#1e293b";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Simular o brilho do pó químico proporcional aos elétrons que batem nele
+                const brightnessFactor = volt / 100;
+                
+                // Criar gradiente radial para simular o fósforo brilhando
+                const grad = ctx.createRadialGradient(
+                    targetX + 60, cy, 5, 
+                    targetX + 60, cy, 50
+                );
+                
+                if (volt > 0) {
+                    // Pó ativo
+                    grad.addColorStop(0, targetLightColors[i]);
+                    grad.addColorStop(1, targetColors[i]);
+                    ctx.shadowColor = targetColors[i];
+                    ctx.shadowBlur = 10 + brightnessFactor * 25;
+                } else {
+                    // Pó totalmente apagado/fosco (aparência apagada)
+                    grad.addColorStop(0, "#1e293b");
+                    grad.addColorStop(1, "#0f172a");
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(targetX + 60, cy, 45, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Desativar efeito de sombra para os textos
+                ctx.shadowBlur = 0;
+
+                // Rótulo dos pós
+                ctx.fillStyle = volt > 0 ? targetLightColors[i] : "#475569";
+                ctx.font = "bold 10px monospace";
+                ctx.fillText(labels[i], targetX + 10, cy - 65);
+                ctx.fillText(`Brilho: ${volt}%`, targetX + 25, cy + 65);
+            }
+
+            // Exibir a caixa de mistura da Cor Resultante no Olho Humano
+            drawCombinedResult(targetX + 60, 515);
+        }
+
+        function drawCombinedResult(x, y) {
+            // Desenhar caixa que mostra o efeito da mistura combinada das 3 cores na retina humana
+            ctx.fillStyle = "#0f172a";
+            ctx.strokeStyle = "#1e293b";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.rect(x - 90, y - 25, 180, 50);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cor resultante
+            const r = Math.floor((voltageR / 100) * 255);
+            const g = Math.floor((voltageG / 100) * 255);
+            const b = Math.floor((voltageB / 100) * 255);
+
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.beginPath();
+            ctx.rect(x - 80, y - 15, 30, 30);
+            ctx.fill();
+            ctx.strokeStyle = "#475569";
+            ctx.stroke();
+
+            // Texto explicativo
+            ctx.fillStyle = "#cbd5e1";
+            ctx.font = "bold 9px monospace";
+            ctx.fillText("COR MISTURADA NO OLHO", x - 40, y - 2);
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "8px monospace";
+            ctx.fillText(`RGB(${r}, ${g}, ${b})`, x - 40, y + 10);
+        }
+
+
+        // --- Renderizador da Aba Macro (Varredura de Imagem do Mario) ---
+
+        function drawMacroView() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#050508";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const displayWidth = 560;
+            const displayHeight = 420;
+            const startX = 120;
+            const startY = 80;
+
+            // Desenhar estrutura externa física da TV de tubo
+            drawRetroTVCabinet(startX, startY, displayWidth, displayHeight);
+
+            // Tela de vidro interna
+            ctx.fillStyle = "#08070b";
+            ctx.fillRect(startX, startY, displayWidth, displayHeight);
+
+            // Definir velocidade da varredura
+            let increment = 1;
+            if (scanSpeed === 'normal') increment = 3;
+            if (scanSpeed === 'fast') increment = 8;
+
+            // Atualizar cursor de varredura
+            scanLineY += increment;
+            if (scanLineY >= displayHeight) {
+                scanLineY = 0;
+            }
+
+            // Desenhar o Mario de 8-bits pixel por pixel, mas cortado pelo estágio atual do feixe
+            const gridRows = marioSprite.length;
+            const gridCols = marioSprite[0].length;
+            const cellW = displayWidth / gridCols;
+            const cellH = displayHeight / gridRows;
+
+            for (let r = 0; r < gridRows; r++) {
+                const currentPixelY = r * cellH;
+                
+                // Em TVs CRT, se o canhão de elétrons ainda não passou por aquela linha horizontal nesta varredura,
+                // a imagem antiga perde força gradualmente (fósforo apagando).
+                let fadeFactor = 1.0;
+                
+                if (scanSpeed !== 'fast') {
+                    if (currentPixelY > scanLineY) {
+                        // Linha que ainda vai receber novos elétrons (exibe brilho residual fraco do ciclo anterior)
+                        fadeFactor = 0.35;
+                    } else {
+                        // Linha que acabou de ser varrida (exibe brilho máximo)
+                        fadeFactor = 1.0 - ((scanLineY - currentPixelY) / displayHeight) * 0.6;
+                    }
+                }
+
+                for (let c = 0; c < gridCols; c++) {
+                    const colorIndex = marioSprite[r][c];
+                    const baseColor = colorPalette[colorIndex];
+                    
+                    const calculatedR = Math.floor(baseColor.r * fadeFactor);
+                    const calculatedG = Math.floor(baseColor.g * fadeFactor);
+                    const calculatedB = Math.floor(baseColor.b * fadeFactor);
+
+                    ctx.fillStyle = `rgb(${calculatedR}, ${calculatedG}, ${calculatedB})`;
+                    
+                    // Desenhar blocos com pequenas falhas horizontais (imitação de scanlines)
+                    ctx.fillRect(
+                        startX + c * cellW, 
+                        startY + r * cellH, 
+                        cellW - 0.5, 
+                        cellH - 1.5
+                    );
+                }
+            }
+
+            // Desenhar a linha do canhão de elétrons cruzando horizontalmente (O "Sinal de Varredura" ativo)
+            if (scanSpeed !== 'fast') {
+                const currentScanY = startY + scanLineY;
+                
+                // Efeito de brilho laser sobre a linha ativa
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(startX, currentScanY);
+                ctx.lineTo(startX + displayWidth, currentScanY);
+                ctx.stroke();
+
+                // Rastro do Brilho
+                ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+                ctx.fillRect(startX, currentScanY - 6, displayWidth, 6);
+                ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+                ctx.fillRect(startX, currentScanY - 14, displayWidth, 8);
+
+                // Indicação visual do canhão atirando da lateral
+                ctx.fillStyle = "#f59e0b";
+                ctx.font = "bold 9px monospace";
+                ctx.fillText(`<- CANHÃO ATIVO DESENHANDO LINHA: ${Math.floor(scanLineY)}`, startX + displayWidth - 240, currentScanY - 10);
+            }
+        }
+
+        function drawRetroTVCabinet(x, y, w, h) {
+            // Caixa de madeira marrom da TV vintage
+            ctx.fillStyle = "#331800";
+            ctx.beginPath();
+            ctx.rect(x - 30, y - 30, w + 160, h + 60);
+            ctx.fill();
+            ctx.strokeStyle = "#1a0c00";
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // Moldura plástica cinza ao redor da tela
+            ctx.fillStyle = "#1e293b";
+            ctx.beginPath();
+            ctx.rect(x - 10, y - 10, w + 20, h + 20);
+            ctx.fill();
+            ctx.strokeStyle = "#334155";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Botões analógicos da TV vintage (Lado direito)
+            const btnAreaX = x + w + 15;
+            
+            // Auto-falante da TV (Ranhuras)
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(btnAreaX, y + 10, 100, 150);
+            ctx.fillStyle = "#1e293b";
+            for (let i = 0; i < 150; i += 12) {
+                ctx.fillRect(btnAreaX + 10, y + 15 + i, 80, 4);
+            }
+
+            // Seletores rotativos (Dials)
+            drawRotaryDial(btnAreaX + 50, y + 210, "CANAL");
+            drawRotaryDial(btnAreaX + 50, y + 290, "VOLUME");
+
+            // Entrada de Áudio/Vídeo amarela RCA vintage falsa
+            ctx.fillStyle = "#eab308"; // RCA amarela
+            ctx.beginPath();
+            ctx.arc(btnAreaX + 30, y + 370, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#475569";
+            ctx.stroke();
+            
+            ctx.fillStyle = "#ffffff"; // RCA branca
+            ctx.beginPath();
+            ctx.arc(btnAreaX + 70, y + 370, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#475569";
+            ctx.stroke();
+
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "8px monospace";
+            ctx.fillText("VIDEO", btnAreaX + 16, y + 395);
+            ctx.fillText("AUDIO", btnAreaX + 56, y + 395);
+        }
+
+        function drawRotaryDial(x, y, name) {
+            // Corpo rotativo externo
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Marcador central
+            ctx.strokeStyle = "#f1f5f9";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            // Rotacionar levemente o ponteiro para estilo
+            ctx.lineTo(x + 15 * Math.cos(2), y + 15 * Math.sin(2));
+            ctx.stroke();
+
+            // Rótulo
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "9px monospace";
+            ctx.fillText(name, x - 18, y + 38);
+        }
+
+        // --- Loop Principal de Animação ---
+        function startLoop() {
+            function loop() {
+                if (activeTab === 'micro') {
+                    drawMicroView();
+                } else {
+                    drawMacroView();
+                }
+                animationFrameId = requestAnimationFrame(loop);
+            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            loop();
+        }
+
+        // Inicializar simulador ao carregar
+        window.onload = function() {
+            init();
+        };
+    </script>
+</body>
+</html>
