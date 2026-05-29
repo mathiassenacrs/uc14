@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Heatmap SVG Base64</title>
+  <!-- Tailwind CSS para um design moderno e elegante -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons para elementos visuais consistentes -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Customizações finas para scrollbar e foco */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur px-6 py-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-500/20">
+          <i data-lucide="flame" class="w-6 h-6 animate-pulse"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            Heatmap SVG Engine
+          </h1>
+          <p class="text-xs text-slate-400">Geração de mapas de calor vetoriais via matrizes em Base64</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-xs bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/50 text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        Classe JS Ativa
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Painel de Configurações (Esquerda) -->
+    <section class="lg:col-span-5 bg-slate-900/60 border border-slate-800 rounded-2xl p-5 flex flex-col gap-6 backdrop-blur-sm shadow-xl">
+      
+      <!-- Toggle de Modo de Entrada (Algorítmico vs Manual) -->
+      <div>
+        <h2 class="text-lg font-semibold flex items-center gap-2 text-indigo-400 mb-2">
+          <i data-lucide="database" class="w-5 h-5"></i> Entrada de Dados
+        </h2>
+        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="modePresetBtn" onclick="setInputMode('preset')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow">
+            Gerador Automático
+          </button>
+          <button id="modeManualBtn" onclick="setInputMode('manual')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200">
+            Matriz Manual (JSON)
+          </button>
+        </div>
+      </div>
+
+      <!-- PAINEL AUTO: Configurações de Dimensão e Padrões -->
+      <div id="panelPreset" class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Linhas (Y)</label>
+            <div class="flex items-center gap-2">
+              <input type="range" id="inputRows" min="3" max="64" value="8" class="w-full accent-indigo-500">
+              <span id="labelRows" class="text-sm font-semibold font-mono bg-slate-800 px-2 py-1 rounded w-10 text-center">8</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Colunas (X)</label>
+            <div class="flex items-center gap-2">
+              <input type="range" id="inputCols" min="3" max="64" value="8" class="w-full accent-indigo-500">
+              <span id="labelCols" class="text-sm font-semibold font-mono bg-slate-800 px-2 py-1 rounded w-10 text-center">8</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-2">Padrão Algorítmico</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="changePattern('sine')" id="btn-sine" class="pattern-btn active py-2 px-3 rounded-lg text-xs font-medium border bg-indigo-600/20 border-indigo-500 text-indigo-300 transition-all flex items-center justify-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4"></i> Senoide [-1, 1]
+            </button>
+            <button onclick="changePattern('gaussian')" id="btn-gaussian" class="pattern-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              <i data-lucide="circle-dot" class="w-4 h-4"></i> Gaussiana [0, 1]
+            </button>
+            <button onclick="changePattern('gradient')" id="btn-gradient" class="pattern-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              <i data-lucide="trending-up" class="w-4 h-4"></i> Gradiente [0, 1]
+            </button>
+            <button onclick="changePattern('random')" id="btn-random" class="pattern-btn py-2 px-3 rounded-lg text-xs font-medium border border-slate-800 bg-slate-900 text-slate-400 hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+              <i data-lucide="shuffle" class="w-4 h-4"></i> Ruído [0, 100]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL MANUAL: Textarea para colar matriz customizada -->
+      <div id="panelManual" class="hidden flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1.5">Insira a Matriz Bidimensional de Inteiros/Decimais (Formato JSON)</label>
+          <textarea id="manualMatrixInput" rows="7" class="w-full bg-slate-950 border border-slate-850 rounded-xl p-3 font-mono text-xs text-indigo-300 focus:outline-none focus:border-indigo-500/80 resize-y scrollbar" placeholder="Insira seu array de arrays de números..."></textarea>
+        </div>
+        <div id="jsonValidationError" class="hidden text-[11px] bg-red-950/50 border border-red-500/30 text-red-400 px-3 py-2 rounded-lg">
+          <!-- Erro de validação injetado aqui -->
+        </div>
+        <div class="text-[10px] text-slate-400 flex items-start gap-1.5">
+          <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-slate-500 mt-0.5"></i>
+          <span>Exemplo de formato aceito: <code class="text-amber-400 bg-slate-950 px-1 py-0.5 rounded font-mono">[[0.0, 0.25, 0.5], [0.75, 1.0, 0.5], [1.0, 0.0, 0.8]]</code></span>
+        </div>
+      </div>
+
+      <hr class="border-slate-800">
+
+      <div>
+        <h2 class="text-lg font-semibold flex items-center gap-2 text-indigo-400">
+          <i data-lucide="palette" class="w-5 h-5"></i> Customização Visual
+        </h2>
+        <p class="text-xs text-slate-400 mt-1">Configure o mapeamento de cores e o aspecto do SVG gerado.</p>
+      </div>
+
+      <!-- Seletor de Paleta -->
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-2">Paleta Cromática</label>
+        <div class="grid grid-cols-1 gap-2">
+          <!-- Espectral Estendido (Nova, solicitada pelo usuário, agora configurada como padrão) -->
+          <label class="flex items-center justify-between p-2.5 rounded-lg border border-indigo-500 bg-indigo-950/30 cursor-pointer transition-all">
+            <div class="flex items-center gap-3">
+              <input type="radio" name="palette" value="espectralEstendido" checked class="accent-indigo-500">
+              <span class="text-xs font-semibold text-slate-100">Arco-íris Estendido (Solicitada)</span>
+            </div>
+            <div class="flex h-4 w-32 rounded overflow-hidden shadow-inner border border-slate-700">
+              <div class="flex-grow" style="background-color: #0000ff" title="Azul Forte"></div>
+              <div class="flex-grow" style="background-color: #0080ff" title="Azul Fraco"></div>
+              <div class="flex-grow" style="background-color: #00ffbe" title="Azul Esverdeado"></div>
+              <div class="flex-grow" style="background-color: #00ff00" title="Verde"></div>
+              <div class="flex-grow" style="background-color: #a0ff00" title="Verde Amarelado"></div>
+              <div class="flex-grow" style="background-color: #ffff00" title="Amarelo"></div>
+              <div class="flex-grow" style="background-color: #ff8c00" title="Laranja"></div>
+              <div class="flex-grow" style="background-color: #ff3c00" title="Laranja avermelhado"></div>
+              <div class="flex-grow" style="background-color: #ff0000" title="Vermelho Forte"></div>
+            </div>
+          </label>
+          <!-- Azul para Vermelho Simplificado -->
+          <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-850 cursor-pointer transition-all">
+            <div class="flex items-center gap-3">
+              <input type="radio" name="palette" value="azulVermelho" class="accent-indigo-500">
+              <span class="text-xs font-medium text-slate-300">Azul simples para Vermelho</span>
+            </div>
+            <div class="flex h-3 w-24 rounded overflow-hidden">
+              <div class="flex-grow" style="background-color: #0000ff"></div>
+              <div class="flex-grow" style="background-color: #8000ff"></div>
+              <div class="flex-grow" style="background-color: #ff00ff"></div>
+              <div class="flex-grow" style="background-color: #ff0080"></div>
+              <div class="flex-grow" style="background-color: #ff0000"></div>
+            </div>
+          </label>
+          <!-- Viridis -->
+          <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-850 cursor-pointer transition-all">
+            <div class="flex items-center gap-3">
+              <input type="radio" name="palette" value="viridis" class="accent-indigo-500">
+              <span class="text-xs font-medium text-slate-300">Viridis (Padrão)</span>
+            </div>
+            <div class="flex h-3 w-24 rounded overflow-hidden">
+              <div class="flex-grow" style="background-color: #440154"></div>
+              <div class="flex-grow" style="background-color: #3b528b"></div>
+              <div class="flex-grow" style="background-color: #21908d"></div>
+              <div class="flex-grow" style="background-color: #5dc962"></div>
+              <div class="flex-grow" style="background-color: #fde725"></div>
+            </div>
+          </label>
+          <!-- Magma -->
+          <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-850 cursor-pointer transition-all">
+            <div class="flex items-center gap-3">
+              <input type="radio" name="palette" value="magma" class="accent-indigo-500">
+              <span class="text-xs font-medium text-slate-300">Magma</span>
+            </div>
+            <div class="flex h-3 w-24 rounded overflow-hidden">
+              <div class="flex-grow" style="background-color: #000004"></div>
+              <div class="flex-grow" style="background-color: #51127c"></div>
+              <div class="flex-grow" style="background-color: #b63679"></div>
+              <div class="flex-grow" style="background-color: #fb8861"></div>
+              <div class="flex-grow" style="background-color: #fcfdbf"></div>
+            </div>
+          </label>
+          <!-- Thermal -->
+          <label class="flex items-center justify-between p-2.5 rounded-lg border border-slate-800 bg-slate-900/50 hover:bg-slate-850 cursor-pointer transition-all">
+            <div class="flex items-center gap-3">
+              <input type="radio" name="palette" value="thermal" class="accent-indigo-500">
+              <span class="text-xs font-medium text-slate-300">Térmica / Ironbow</span>
+            </div>
+            <div class="flex h-3 w-24 rounded overflow-hidden">
+              <div class="flex-grow" style="background-color: #000000"></div>
+              <div class="flex-grow" style="background-color: #0000ff"></div>
+              <div class="flex-grow" style="background-color: #ff0000"></div>
+              <div class="flex-grow" style="background-color: #ffff00"></div>
+              <div class="flex-grow" style="background-color: #ffffff"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Configuração de Escala Estrita vs Dinâmica -->
+      <div>
+        <label class="block text-xs font-medium text-slate-300 mb-2">Modo de Mapeamento Numérico</label>
+        <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="scaleStrictBtn" onclick="setScaleMode('strict')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow" title="Fixa o mínimo em 0 e máximo em 1">
+            Escala Fixa [0 a 1]
+          </button>
+          <button id="scaleDynamicBtn" onclick="setScaleMode('dynamic')" class="py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200" title="Mapeia do menor ao maior valor encontrado na matriz">
+            Escala Dinâmica (Auto)
+          </button>
+        </div>
+      </div>
+
+      <!-- Configurações Adicionais do Heatmap -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Largura SVG (px)</label>
+          <input type="number" id="svgWidth" value="500" min="50" max="2000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-all text-indigo-300">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Altura SVG (px)</label>
+          <input type="number" id="svgHeight" value="500" min="50" max="2000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-indigo-500 transition-all text-indigo-300">
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="strokeCells" checked class="rounded accent-indigo-500 text-indigo-600 bg-slate-800 border-slate-700">
+          <span class="text-xs text-slate-300">Bordas sutis nas células</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="showNumbers" checked class="rounded accent-indigo-500 text-indigo-600 bg-slate-800 border-slate-700">
+          <span class="text-xs text-slate-300">Renderizar valores de texto (apenas matrizes pequenas)</span>
+        </label>
+      </div>
+
+    </section>
+
+    <!-- Visualização de Resultados (Direita) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+      
+      <!-- Preview do Heatmap -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm shadow-xl flex flex-col items-center">
+        <div class="w-full flex justify-between items-center mb-4">
+          <h2 class="text-sm font-semibold tracking-wider text-indigo-400 uppercase flex items-center gap-2">
+            <i data-lucide="eye" class="w-4 h-4"></i> Visualização do SVG Dinâmico
+          </h2>
+          <span class="text-xs bg-slate-800 text-indigo-300 px-2 py-1 rounded font-mono" id="dataRangeLabel">Escala: [0.0 - 1.0]</span>
+        </div>
+        
+        <!-- Container do SVG Renderizado -->
+        <div class="w-full flex justify-center items-center p-6 bg-slate-950/80 rounded-xl border border-slate-800/80 min-h-[320px] relative overflow-auto">
+          <div id="heatmapContainer" class="max-w-full max-h-[450px] flex items-center justify-center transition-all duration-300">
+            <!-- SVG injetado dinamicamente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Saída Base64 -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm shadow-xl flex flex-col gap-4">
+        <div>
+          <h2 class="text-sm font-semibold tracking-wider text-emerald-400 uppercase flex items-center gap-2">
+            <i data-lucide="code" class="w-4 h-4"></i> Representação Base64 (Data URL)
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Use este hash diretamente no atributo <code class="text-amber-400">src</code> de elementos <code class="text-amber-400">&lt;img&gt;</code> ou como <code class="text-amber-400">background-image</code> no CSS.</p>
+        </div>
+
+        <div class="relative">
+          <textarea id="base64Output" readonly rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-[10px] text-slate-300 focus:outline-none focus:border-emerald-500/50 resize-none break-all select-all scrollbar"></textarea>
+          
+          <div class="absolute bottom-3 right-3 flex items-center gap-2">
+            <button onclick="copyBase64()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-xs font-semibold rounded-lg text-white shadow-lg shadow-emerald-600/10 transition-all">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Código
+            </button>
+          </div>
+        </div>
+        
+        <!-- Alerta de Copiado -->
+        <div id="copyAlert" class="hidden flex items-center gap-2 text-xs bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 px-3 py-2 rounded-lg transition-all animate-fade-in">
+          <i data-lucide="check-circle" class="w-4 h-4"></i> Base64 copiado com sucesso para a área de transferência!
+        </div>
+      </div>
+
+      <!-- Prova Real: Renderização via <img> Tag usando a String Base64 -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm shadow-xl flex flex-col gap-4">
+        <div>
+          <h2 class="text-sm font-semibold tracking-wider text-amber-400 uppercase flex items-center gap-2">
+            <i data-lucide="image" class="w-4 h-4"></i> Prova Real: Renderização via &lt;img src="base64"&gt;
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Este componente é uma tag de imagem nativa do HTML recebendo a string Base64 extraída acima.</p>
+        </div>
+        
+        <div class="flex justify-center p-4 bg-slate-950/40 border border-slate-800 rounded-xl">
+          <img id="heatmapImgProof" class="max-w-[200px] max-h-[200px] border border-slate-800 rounded" alt="Prova do Heatmap Base64">
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Painel de Dados Brutos (Expandível) -->
+  <footer class="bg-slate-900/30 border-t border-slate-900 py-6 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+      <details class="group cursor-pointer">
+        <summary class="list-none flex items-center gap-2 text-xs text-slate-400 group-open:text-slate-200 transition-all">
+          <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-open:rotate-90"></i>
+          Ver Matriz Numérica Bidimensional Ativa (Input em uso pelo Engine)
+        </summary>
+        <div class="mt-3 p-4 bg-slate-950 rounded-xl border border-slate-800 max-h-48 overflow-auto scrollbar">
+          <pre id="matrixRawView" class="font-mono text-[10px] text-cyan-400 whitespace-pre-wrap"></pre>
+        </div>
+      </details>
+    </div>
+  </footer>
+
+  <!-- ==================== LOGICA JAVASCRIPT ==================== -->
+  <script>
+    
+    // DEFINIÇÃO DAS PALETAS DE CORES
+    const paletasCromaticas = {
+      espectralEstendido: [
+        { r: 0, g: 0, b: 255 },     // 0.000 - Azul Forte
+        { r: 0, g: 128, b: 255 },   // 0.125 - Azul Fraco
+        { r: 0, g: 255, b: 190 },   // 0.250 - Azul Esverdeado
+        { r: 0, g: 255, b: 0 },     // 0.375 - Verde
+        { r: 160, g: 255, b: 0 },   // 0.500 - Verde Amarelado
+        { r: 255, g: 255, b: 0 },   // 0.625 - Amarelo
+        { r: 255, g: 140, b: 0 },   // 0.750 - Laranja
+        { r: 255, g: 60, b: 0 },    // 0.875 - Laranja puxando Vermelho
+        { r: 255, g: 0, b: 0 }      // 1.000 - Vermelho Forte
+      ],
+      azulVermelho: [
+        { r: 0, g: 0, b: 255 },     // 0.0 - Azul Forte
+        { r: 128, g: 0, b: 255 },   // 0.25 - Roxo vibrante
+        { r: 255, g: 0, b: 255 },   // 0.5 - Magenta puro
+        { r: 255, g: 0, b: 128 },   // 0.75 - Rosa avermelhado
+        { r: 255, g: 0, b: 0 }      // 1.0 - Vermelho Forte
+      ],
+      viridis: [
+        { r: 68, g: 1, b: 84 },      // Roxo Escuro
+        { r: 59, g: 82, b: 139 },    // Azul Escuro
+        { r: 33, g: 144, b: 141 },   // Verde Azulado
+        { r: 94, g: 201, b: 98 },    // Verde Claro
+        { r: 253, g: 231, b: 37 }    // Amarelo Brilhante
+      ],
+      magma: [
+        { r: 0, g: 0, b: 4 },        // Preto
+        { r: 81, g: 18, b: 124 },    // Roxo Profundo
+        { r: 182, g: 54, b: 121 },   // Rosa Vibrante
+        { r: 251, g: 136, b: 97 },   // Laranja Pastel
+        { r: 252, g: 253, b: 191 }   // Creme Suave
+      ],
+      thermal: [
+        { r: 0, g: 0, b: 0 },        // Preto (Zero)
+        { r: 0, g: 0, b: 255 },      // Azul (Frio)
+        { r: 255, g: 0, b: 0 },      // Vermelho (Quente)
+        { r: 255, g: 255, b: 0 },    // Amarelo (Fogo)
+        { r: 255, g: 255, b: 255 }   // Branco (Fusão)
+      ]
+    };
+
+    /**
+     * CLASSE HEATMAP
+     * Recebe um vetor bidimensional (matriz) de números e computa a renderização SVG e codificação Base64.
+     */
+    class Heatmap {
+      /**
+       * @param {number[][]} data - Vetor bidimensional contendo os valores numéricos.
+       * @param {Object} options - Configurações opcionais da renderização.
+       */
+      constructor(data, options = {}) {
+        this.data = data;
+        this.width = options.width || 400;
+        this.height = options.height || 400;
+        this.paletteName = options.paletteName || 'espectralEstendido';
+        this.strokeCells = options.strokeCells !== undefined ? options.strokeCells : true;
+        this.showNumbers = options.showNumbers !== undefined ? options.showNumbers : false;
+
+        // Configuração para forçar os limites em 0 e 1, ou usar dinâmico
+        this.scaleMode = options.scaleMode || 'strict'; // 'strict' (0 a 1) ou 'dynamic' (auto min/max)
+
+        if (this.scaleMode === 'strict') {
+          this.minVal = 0;
+          this.maxVal = 1;
+        } else {
+          this.minVal = options.minVal !== undefined ? options.minVal : this.getMinValue();
+          this.maxVal = options.maxVal !== undefined ? options.maxVal : this.getMaxValue();
+        }
+      }
+
+      /**
+       * Encontra o menor valor presente na matriz fornecida.
+       */
+      getMinValue() {
+        let min = Infinity;
+        for (let r = 0; r < this.data.length; r++) {
+          for (let c = 0; c < this.data[r].length; c++) {
+            if (this.data[r][c] < min) min = this.data[r][c];
+          }
+        }
+        return min === Infinity ? 0 : min;
+      }
+
+      /**
+       * Encontra o maior valor presente na matriz fornecida.
+       */
+      getMaxValue() {
+        let max = -Infinity;
+        for (let r = 0; r < this.data.length; r++) {
+          for (let c = 0; c < this.data[r].length; c++) {
+            if (this.data[r][c] > max) max = this.data[r][c];
+          }
+        }
+        return max === -Infinity ? 1 : max;
+      }
+
+      /**
+       * interpolação cromática linear multi-estágio.
+       * @param {number} normalized - Valor contido estritamente entre 0.0 e 1.0.
+       * @returns {string} String contendo rgb(R, G, B) pronta para CSS/SVG.
+       */
+      getColor(normalized) {
+        // Fallback e proteção de limites
+        const val = Math.max(0, Math.min(1, isNaN(normalized) ? 0 : normalized));
+        const palette = paletasCromaticas[this.paletteName] || paletasCromaticas.espectralEstendido;
+
+        if (val <= 0) return `rgb(${palette[0].r}, ${palette[0].g}, ${palette[0].b})`;
+        if (val >= 1) return `rgb(${palette[palette.length - 1].r}, ${palette[palette.length - 1].g}, ${palette[palette.length - 1].b})`;
+
+        // Determina em qual segmento da paleta o valor se encontra
+        const numSegments = palette.length - 1;
+        const segmentProgress = val * numSegments;
+        const index = Math.floor(segmentProgress);
+        const factor = segmentProgress - index; // Fração interna do segmento
+
+        const cStart = palette[index];
+        const cEnd = palette[index + 1];
+
+        // Interpolar componentes de cor
+        const r = Math.round(cStart.r + (cEnd.r - cStart.r) * factor);
+        const g = Math.round(cStart.g + (cEnd.g - cStart.g) * factor);
+        const b = Math.round(cStart.b + (cEnd.b - cStart.b) * factor);
+
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+
+      /**
+       * Gera a string XML de um arquivo SVG completo baseado nos dados fornecidos.
+       * @returns {string} Código XML do SVG.
+       */
+      generateSVG() {
+        const rows = this.data.length;
+        if (rows === 0) return `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}"></svg>`;
+        const cols = this.data[0].length;
+        if (cols === 0) return `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}"></svg>`;
+
+        const cellWidth = this.width / cols;
+        const cellHeight = this.height / rows;
+        const range = this.maxVal - this.minVal || 1;
+
+        // Início da String SVG estruturada
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}" viewBox="0 0 ${this.width} ${this.height}">\n`;
+        
+        // Definição de estilos internos básicos
+        svg += `  <style>
+    .cell { transition: fill 0.2s ease; }
+    .cell:hover { opacity: 0.85; cursor: pointer; }
+    .cell-txt { font-family: monospace; font-size: ${Math.min(cellHeight, cellWidth) * 0.28}px; font-weight: bold; fill: #ffffff; text-anchor: middle; dominant-baseline: central; pointer-events: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+    .cell-txt-dark { font-family: monospace; font-size: ${Math.min(cellHeight, cellWidth) * 0.28}px; font-weight: bold; fill: #000000; text-anchor: middle; dominant-baseline: central; pointer-events: none; text-shadow: 1px 1px 1px rgba(255,255,255,0.6); }
+  </style>\n`;
+
+        // Renderização recursiva das células
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const rawVal = this.data[r][c];
+            // Normalização linear de 0 a 1 baseado no minVal e maxVal configurados
+            const normalized = (rawVal - this.minVal) / range;
+            const fillColor = this.getColor(normalized);
+            
+            // Tratamento de contornos opcionais para um look fluido
+            const strokeAttr = this.strokeCells 
+              ? `stroke="${fillColor}" stroke-width="0.5" stroke-linejoin="round"` 
+              : `stroke="none"`;
+
+            const x = c * cellWidth;
+            const y = r * cellHeight;
+
+            svg += `  <rect class="cell" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${cellWidth.toFixed(2)}" height="${cellHeight.toFixed(2)}" fill="${fillColor}" ${strokeAttr}>
+    <title>Linha: ${r + 1}, Coluna: ${c + 1}\nValor real: ${rawVal}\nNormalizado: ${normalized.toFixed(4)}</title>
+  </rect>\n`;
+
+            // Adiciona opcionalmente texto numérico sobreposto (apenas se for visível/viável)
+            if (this.showNumbers) {
+              const textX = x + cellWidth / 2;
+              const textY = y + cellHeight / 2;
+              
+              // Decide se usa cor branca ou preta para o texto dependendo do nível de brilho
+              // Na nossa paleta espectralEstendido, cores como Amarelo e Verde Amarelado necessitam de texto escuro
+              const isLightColor = (normalized > 0.45 && normalized < 0.72) || (this.paletteName === 'viridis' && normalized > 0.6);
+              const textClass = isLightColor ? 'cell-txt-dark' : 'cell-txt';
+              
+              // Se for um número inteiro, exibe inteiro, senão limita as casas decimais
+              const displayVal = Number.isInteger(rawVal) ? rawVal.toString() : rawVal.toFixed(2);
+              svg += `  <text class="${textClass}" x="${textX.toFixed(2)}" y="${textY.toFixed(2)}">${displayVal}</text>\n`;
+            }
+          }
+        }
+
+        svg += `</svg>`;
+        return svg;
+      }
+
+      /**
+       * Codifica a string XML gerada do SVG para Base64 puro.
+       * @returns {string} String codificada em Base64.
+       */
+      toBase64() {
+        const svgContent = this.generateSVG();
+        // codificação UTF-8 robusta compatível com btoa
+        return btoa(unescape(encodeURIComponent(svgContent)));
+      }
+
+      /**
+       * Converte o SVG para uma URL utilizável diretamente em elementos HTML de mídia.
+       * @returns {string} Data URI contendo o Base64.
+       */
+      toDataURL() {
+        return `data:image/svg+xml;base64,${this.toBase64()}`;
+      }
+    }
+
+
+    // ==================== APLICAÇÃO DE TESTE E INTERFACE GRÁFICA ====================
+
+    // Variáveis de estado global da aplicação
+    let inputMode = 'preset';     // 'preset' ou 'manual'
+    let currentPattern = 'sine';  // Padrão algorítmico do preset
+    let scaleMode = 'strict';     // 'strict' (0 a 1) ou 'dynamic' (auto)
+
+    // Matriz manual inicial padrão de exemplo de inteiros/decimais [0 a 1]
+    let initialManualMatrix = [
+      [0.0, 0.1, 0.2, 0.3, 0.4],
+      [0.9, 0.8, 0.7, 0.6, 0.5],
+      [0.1, 0.3, 0.5, 0.7, 0.9],
+      [1.0, 0.2, 0.8, 0.4, 0.0]
+    ];
+
+    // Captura de Elementos do DOM
+    const inputRows = document.getElementById('inputRows');
+    const inputCols = document.getElementById('inputCols');
+    const labelRows = document.getElementById('labelRows');
+    const labelCols = document.getElementById('labelCols');
+    const svgWidth = document.getElementById('svgWidth');
+    const svgHeight = document.getElementById('svgHeight');
+    const strokeCells = document.getElementById('strokeCells');
+    const showNumbers = document.getElementById('showNumbers');
+    const heatmapContainer = document.getElementById('heatmapContainer');
+    const base64Output = document.getElementById('base64Output');
+    const heatmapImgProof = document.getElementById('heatmapImgProof');
+    const matrixRawView = document.getElementById('matrixRawView');
+    const copyAlert = document.getElementById('copyAlert');
+    const dataRangeLabel = document.getElementById('dataRangeLabel');
+    const manualMatrixInput = document.getElementById('manualMatrixInput');
+    const jsonValidationError = document.getElementById('jsonValidationError');
+
+    const panelPreset = document.getElementById('panelPreset');
+    const panelManual = document.getElementById('panelManual');
+    const modePresetBtn = document.getElementById('modePresetBtn');
+    const modeManualBtn = document.getElementById('modeManualBtn');
+    const scaleStrictBtn = document.getElementById('scaleStrictBtn');
+    const scaleDynamicBtn = document.getElementById('scaleDynamicBtn');
+
+    // Inicializa o textarea manual com a matriz padrão
+    manualMatrixInput.value = JSON.stringify(initialManualMatrix, null, 2);
+
+    // Altera o Modo de Entrada (Gerador Preset vs Input de JSON Manual)
+    function setInputMode(mode) {
+      inputMode = mode;
+      if (mode === 'preset') {
+        panelPreset.classList.remove('hidden');
+        panelManual.classList.add('hidden');
+        modePresetBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow";
+        modeManualBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200";
+      } else {
+        panelPreset.classList.add('hidden');
+        panelManual.classList.remove('hidden');
+        modePresetBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200";
+        modeManualBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow";
+      }
+      renderHeatmap();
+    }
+
+    // Altera o Modo de Escala (Estrito de 0-1 vs Dinâmico Automatizado)
+    function setScaleMode(mode) {
+      scaleMode = mode;
+      if (mode === 'strict') {
+        scaleStrictBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow";
+        scaleDynamicBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200";
+      } else {
+        scaleStrictBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-slate-200";
+        scaleDynamicBtn.className = "py-1.5 px-3 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow";
+      }
+      renderHeatmap();
+    }
+
+    // Funções geradoras de Matrizes Avançadas (Vetor Bidimensional)
+    function generateMatrix(rows, cols, pattern) {
+      const matrix = [];
+      for (let r = 0; r < rows; r++) {
+        const row = [];
+        for (let c = 0; c < cols; c++) {
+          let value = 0;
+          if (pattern === 'sine') {
+            // Ondas harmônicas mapeadas entre -1 e 1 (Mapeado depois de 0 a 1)
+            const rawSine = Math.sin((r / (rows - 1 || 1)) * Math.PI * 1.5) * Math.cos((c / (cols - 1 || 1)) * Math.PI * 1.5);
+            // Normalizar de [-1, 1] para [0, 1]
+            value = (rawSine + 1) / 2;
+          } else if (pattern === 'gaussian') {
+            // Distribuição de Gauss (Sino) centrada na matriz [0 a 1]
+            const centerY = rows / 2;
+            const centerX = cols / 2;
+            const sigmaY = rows / 3.5 || 1;
+            const sigmaX = cols / 3.5 || 1;
+            const dy = r - centerY;
+            const dx = c - centerX;
+            value = Math.exp(-((dy * dy) / (2 * sigmaY * sigmaY) + (dx * dx) / (2 * sigmaX * sigmaX)));
+          } else if (pattern === 'gradient') {
+            // Gradiente diagonal linear regular de 0 a 1
+            value = (r + c) / (rows + cols - 2 || 1);
+          } else if (pattern === 'random') {
+            // Valores entre 0 e 100 para demonstrar escala dinâmica ampla
+            value = Math.floor(Math.random() * 101);
+          }
+          row.push(value);
+        }
+        matrix.push(row);
+      }
+      return matrix;
+    }
+
+    // Obtém e valida a matriz inserida no textarea manual
+    function getManualMatrix() {
+      const rawText = manualMatrixInput.value.trim();
+      if (!rawText) {
+        showJSONError("O campo de matriz manual está vazio.");
+        return null;
+      }
+
+      try {
+        const parsed = JSON.parse(rawText);
+        
+        // Valida se é de fato um array bidimensional
+        if (!Array.isArray(parsed)) {
+          throw new Error("A entrada precisa ser uma lista principal de linhas: [...]");
+        }
+        if (parsed.length === 0) {
+          throw new Error("A matriz não pode estar vazia.");
+        }
+
+        for (let r = 0; r < parsed.length; r++) {
+          if (!Array.isArray(parsed[r])) {
+            throw new Error(`A linha ${r + 1} não é um array válido.`);
+          }
+          if (parsed[r].length === 0) {
+            throw new Error(`A linha ${r + 1} não possui nenhuma coluna.`);
+          }
+          
+          // Validação individual das células numéricas
+          for (let c = 0; c < parsed[r].length; c++) {
+            if (typeof parsed[r][c] !== 'number' || isNaN(parsed[r][c])) {
+              throw new Error(`Elemento inválido encontrado na Linha ${r + 1}, Coluna ${c + 1}. Deve ser um número.`);
+            }
+          }
+        }
+
+        // Tudo correto! Esconder qualquer erro anterior
+        jsonValidationError.classList.add('hidden');
+        return parsed;
+
+      } catch (err) {
+        showJSONError(err.message);
+        return null;
+      }
+    }
+
+    function showJSONError(msg) {
+      jsonValidationError.textContent = `Erro de Sintaxe: ${msg}`;
+      jsonValidationError.classList.remove('hidden');
+    }
+
+    // Gerador Centralizado da Aplicação (Engine Trigger)
+    function renderHeatmap() {
+      const width = parseInt(svgWidth.value) || 400;
+      const height = parseInt(svgHeight.value) || 400;
+      const useStroke = strokeCells.checked;
+      const displayNumbers = showNumbers.checked;
+
+      // Obtém a paleta selecionada nos inputs radiais
+      const selectedPalette = document.querySelector('input[name="palette"]:checked').value;
+
+      let dataMatrix = [];
+
+      // Decide qual matriz computar
+      if (inputMode === 'preset') {
+        const rows = parseInt(inputRows.value);
+        const cols = parseInt(inputCols.value);
+        dataMatrix = generateMatrix(rows, cols, currentPattern);
+      } else {
+        const manualData = getManualMatrix();
+        if (!manualData) {
+          // Mantém a exibição estagnada ou exibe sem dados se houver erro grave de digitação
+          return;
+        }
+        dataMatrix = manualData;
+      }
+
+      // Cria a instância da nossa classe Heatmap passando as opções dinâmicas
+      const heatmapEngine = new Heatmap(dataMatrix, {
+        width: width,
+        height: height,
+        paletteName: selectedPalette,
+        strokeCells: useStroke,
+        showNumbers: displayNumbers,
+        scaleMode: scaleMode
+      });
+
+      // Atualiza os componentes gráficos do SVG interativo na tela
+      const rawSvg = heatmapEngine.generateSVG();
+      heatmapContainer.innerHTML = rawSvg;
+
+      // Converte para Base64 e injeta nos contêineres de código e teste
+      const base64DataUrl = heatmapEngine.toDataURL();
+      base64Output.value = base64DataUrl;
+      heatmapImgProof.src = base64DataUrl;
+
+      // Atualiza os cabeçalhos de escala exibidos no painel
+      if (scaleMode === 'strict') {
+        dataRangeLabel.textContent = `Escala Fixa: [0.0 - 1.0]`;
+      } else {
+        dataRangeLabel.textContent = `Escala Dinâmica Auto: [Min: ${heatmapEngine.minVal.toFixed(2)}, Max: ${heatmapEngine.maxVal.toFixed(2)}]`;
+      }
+
+      // Atualiza a visualização textual da matriz em uso
+      matrixRawView.textContent = JSON.stringify(dataMatrix, null, 2);
+    }
+
+    // Modificador de Padrões Dinâmicos de Dados
+    function changePattern(pattern) {
+      currentPattern = pattern;
+      document.querySelectorAll('.pattern-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-indigo-600/20', 'border-indigo-500', 'text-indigo-300');
+        btn.classList.add('border-slate-800', 'bg-slate-900', 'text-slate-400');
+      });
+
+      const activeBtn = document.getElementById(`btn-${pattern}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-slate-800', 'bg-slate-900', 'text-slate-400');
+        activeBtn.classList.add('active', 'bg-indigo-600/20', 'border-indigo-500', 'text-indigo-300');
+      }
+      renderHeatmap();
+    }
+
+    // Copiar código para Clipboard
+    function copyBase64() {
+      base64Output.select();
+      base64Output.setSelectionRange(0, 99999); // Suporte Mobile
+      
+      try {
+        document.execCommand('copy');
+        copyAlert.classList.remove('hidden');
+        setTimeout(() => {
+          copyAlert.classList.add('hidden');
+        }, 3000);
+      } catch (err) {
+        console.error('Falha ao tentar copiar o código.', err);
+      }
+    }
+
+    // Ouvintes de Eventos (Listeners) para atualização em tempo real
+    inputRows.addEventListener('input', (e) => {
+      labelRows.textContent = e.target.value;
+      renderHeatmap();
+    });
+
+    inputCols.addEventListener('input', (e) => {
+      labelCols.textContent = e.target.value;
+      renderHeatmap();
+    });
+
+    // Escuta alterações manuais do usuário na caixa de texto JSON
+    manualMatrixInput.addEventListener('input', renderHeatmap);
+
+    svgWidth.addEventListener('input', renderHeatmap);
+    svgHeight.addEventListener('input', renderHeatmap);
+    strokeCells.addEventListener('change', renderHeatmap);
+    showNumbers.addEventListener('change', renderHeatmap);
+
+    document.querySelectorAll('input[name="palette"]').forEach(radio => {
+      radio.addEventListener('change', renderHeatmap);
+    });
+
+    // Inicialização da página
+    window.onload = function() {
+      lucide.createIcons();
+      renderHeatmap();
+    };
+  </script>
+</body>
+</html>
