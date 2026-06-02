@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração: Alterar src da Imagem</title>
+    <style>
+        /* CSS mínimo apenas para centralizar e dar um espaçamento agradável */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            background-color: #e7e7e7;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Demonstração Simples</h2>
+        <p>Clique nos botões abaixo para alterar a imagem:</p>
+        
+        <!-- Imagem inicial (mostrando a primeira opção) -->
+        <img id="minhaImagem" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500" alt="Praia" onerror="this.src='https://via.placeholder.com/500x300?text=Imagem+1'">
+        
+        <br>
+        
+        <!-- Botões de controle -->
+        <button onclick="mudarParaPraia()">Ver Praia</button>
+        <button onclick="mudarParaMontanha()">Ver Montanha</button>
+    </div>
+
+    <script>
+        // Seleciona o elemento da imagem no HTML
+        const imagem = document.getElementById('minhaImagem');
+
+        // Função para alterar para a Imagem 1 (Praia)
+        function mudarParaPraia() {
+            imagem.src = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500";
+            imagem.alt = "Praia ensolarada";
+        }
+
+        // Função para alterar para a Imagem 2 (Montanha)
+        function mudarParaMontanha() {
+            imagem.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500";
+            imagem.alt = "Montanhas majestosas";
+        }
+    </script>
+
+</body>
+</html>
