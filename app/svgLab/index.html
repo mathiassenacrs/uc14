@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Definitivo & Playground Avançado SVG</title>
+    <!-- Tailwind CSS para um design moderno e elegante -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para o editor e scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .code-font {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-teal-500 selection:text-slate-900">
+
+    <!-- Cabeçalho -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
+                    <svg class="w-6 h-6 text-teal-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">Guia & Playground SVG Avançado + JS</h1>
+                    <p class="text-xs text-slate-400">Referência interativa completa: formas, gradientes, filtros, máscaras, animações e DOM</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="#playground" class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold text-xs transition-colors">Playground Ao Vivo</a>
+                <a href="#documentacao" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors">Documentação Completa</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notificação flutuante de cópia (substituto seguro ao alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-teal-500 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span id="toast-message">Copiado para a área de transferência!</span>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow space-y-12">
+
+        <!-- ================= SEÇÃO: PLAYGROUND INTERATIVO ================= -->
+        <section id="playground" class="scroll-mt-24 space-y-6">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse"></span>
+                <h2 class="text-2xl font-bold text-white">1. Playground de Elementos Interativo (Coleção Completa)</h2>
+            </div>
+            
+            <p class="text-sm text-slate-400 max-w-4xl">
+                Selecione qualquer elemento SVG clássico ou avançado. Use os controles dinâmicos para alterar os atributos específicos do objeto. O painel central renderizará o gráfico em tempo real, enquanto o painel direito exibe o código HTML e JavaScript equivalente gerado dinamicamente para o DOM.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                
+                <!-- Painel Esquerdo: Menu de Elementos & Configurações de Atributos -->
+                <div class="lg:col-span-4 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Escolha o Elemento SVG</label>
+                        <select id="element-selector" onchange="selecionarElemento(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 focus:outline-none focus:border-teal-500 mb-6">
+                            <optgroup label="Formas Básicas">
+                                <option value="circle" selected>Círculo (&lt;circle&gt;)</option>
+                                <option value="rect">Retângulo (&lt;rect&gt;)</option>
+                                <option value="ellipse">Elipse (&lt;ellipse&gt;)</option>
+                                <option value="line">Linha (&lt;line&gt;)</option>
+                                <option value="polyline">Polilinha (&lt;polyline&gt;)</option>
+                                <option value="polygon">Polígono (&lt;polygon&gt;)</option>
+                                <option value="path">Caminho Curvo Bézier (&lt;path&gt;)</option>
+                                <option value="text">Texto Vetorial (&lt;text&gt;)</option>
+                            </optgroup>
+                            <optgroup label="Elementos Avançados & Efeitos">
+                                <option value="g">Agrupamento (&lt;g&gt;)</option>
+                                <option value="linearGradient">Gradiente Linear (&lt;linearGradient&gt;)</option>
+                                <option value="clipPath">Máscara de Recorte (&lt;clipPath&gt;)</option>
+                                <option value="mask">Máscara de Luminância (&lt;mask&gt;)</option>
+                                <option value="filter">Filtro de Desfoque (&lt;filter&gt;)</option>
+                                <option value="animate">Animação de Atributo (&lt;animate&gt;)</option>
+                                <option value="image">Imagem Raster (&lt;image&gt;)</option>
+                                <option value="foreignObject">HTML Integrado (&lt;foreignObject&gt;)</option>
+                            </optgroup>
+                        </select>
+
+                        <!-- Descrição Curta do Elemento Atual -->
+                        <div class="mb-4 p-3 bg-slate-950 rounded-xl border border-slate-850">
+                            <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block mb-1">Definição</span>
+                            <p id="element-quick-desc" class="text-xs text-slate-300 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Controles de Atributos Dinâmicos (Gerados/Visíveis conforme o elemento) -->
+                        <div id="dynamic-attributes-container" class="space-y-4">
+                            <h3 class="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3 uppercase tracking-wider">Atributos de Geometria</h3>
+                            <!-- Inserido dinamicamente por JS -->
+                        </div>
+
+                        <!-- Controles de Estilos SVG comuns a quase todos (exibe ou oculta conforme necessário) -->
+                        <div id="styling-panel" class="space-y-4 mt-6">
+                            <h3 class="text-xs font-bold text-slate-300 border-b border-slate-800 pb-2 mb-3 uppercase tracking-wider">Propriedades de Estilo (CSS)</h3>
+                            
+                            <!-- Cor de Preenchimento (Fill) -->
+                            <div id="control-fill">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Preenchimento (fill)</span>
+                                    <span id="val-fill" class="text-slate-300">#14b8a6</span>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="style-fill" value="#14b8a6" oninput="atualizarEstilo('fill', this.value)" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+                                    <input type="text" id="text-fill" value="#14b8a6" oninput="atualizarEstilo('fill', this.value)" class="flex-grow bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs code-font text-slate-300">
+                                </div>
+                            </div>
+
+                            <!-- Opacidade de Preenchimento -->
+                            <div id="control-fill-opacity">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Opacidade Preenchimento (fill-opacity)</span>
+                                    <span id="val-fill-opacity">1.0</span>
+                                </div>
+                                <input type="range" id="style-fill-opacity" min="0" max="1" step="0.1" value="1" oninput="atualizarEstilo('fill-opacity', this.value)" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                            </div>
+
+                            <!-- Cor da Borda (Stroke) -->
+                            <div id="control-stroke">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Cor da Borda (stroke)</span>
+                                    <span id="val-stroke" class="text-slate-300">#0f766e</span>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <input type="color" id="style-stroke" value="#0f766e" oninput="atualizarEstilo('stroke', this.value)" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+                                    <input type="text" id="text-stroke" value="#0f766e" oninput="atualizarEstilo('stroke', this.value)" class="flex-grow bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs code-font text-slate-300">
+                                </div>
+                            </div>
+
+                            <!-- Espessura da Borda -->
+                            <div id="control-stroke-width">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Espessura da Borda (stroke-width)</span>
+                                    <span id="val-stroke-width">4px</span>
+                                </div>
+                                <input type="range" id="style-stroke-width" min="0" max="20" step="1" value="4" oninput="atualizarEstilo('stroke-width', this.value + 'px')" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                            </div>
+
+                            <!-- Tracejado da Borda (Stroke Dasharray) -->
+                            <div id="control-stroke-dasharray">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Tracejado (stroke-dasharray)</span>
+                                    <span id="val-stroke-dasharray" class="text-slate-300">Nenhum</span>
+                                </div>
+                                <select id="style-stroke-dasharray" onchange="atualizarEstilo('stroke-dasharray', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none">
+                                    <option value="none">Sólido</option>
+                                    <option value="5,5">Espaçado (5px, 5px)</option>
+                                    <option value="10,5">Alternado (10px, 5px)</option>
+                                    <option value="15,10,5,10">Complexo (15, 10, 5, 10)</option>
+                                </select>
+                            </div>
+
+                            <!-- Arredondamento das Pontas da Borda (Stroke Linecap) -->
+                            <div id="control-stroke-linecap">
+                                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                    <span>Terminação de Linha (stroke-linecap)</span>
+                                </div>
+                                <select id="style-stroke-linecap" onchange="atualizarEstilo('stroke-linecap', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:outline-none">
+                                    <option value="butt">Butt (Reto rente)</option>
+                                    <option value="round">Round (Arredondado)</option>
+                                    <option value="square">Square (Quadrado estendido)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Painel Central: Visualização Gráfica do SVG -->
+                <div class="lg:col-span-4 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col items-center justify-between shadow-lg relative min-h-[450px]">
+                    <div class="w-full flex justify-between items-center mb-4">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Visualização Gráfica</h3>
+                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">viewBox: 0 0 300 300</span>
+                    </div>
+
+                    <!-- Canvas do SVG Real -->
+                    <div class="w-full max-w-[280px] aspect-square bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl flex items-center justify-center p-2 overflow-hidden relative">
+                        <!-- Grid de coordenadas de apoio de fundo -->
+                        <div class="absolute inset-0 pointer-events-none opacity-5">
+                            <div class="w-full h-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                        </div>
+                        
+                        <svg id="canvas-sandbox" width="100%" height="100%" viewBox="0 0 300 300" class="w-full h-full">
+                            <!-- O elemento ativo será inserido/atualizado aqui dinamicamente pelo JavaScript -->
+                        </svg>
+                    </div>
+
+                    <div class="w-full mt-4 text-center">
+                        <p class="text-[11px] text-slate-500">
+                            Modifique os parâmetros no painel esquerdo para ver o comportamento gráfico.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Painel Direito: Geração de Código HTML & JS -->
+                <div class="lg:col-span-4 flex flex-col gap-4">
+                    
+                    <!-- Bloco de código HTML -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 flex flex-col justify-between flex-1">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Código HTML Gerado</span>
+                                <button onclick="copiarCodigo('code-html')" class="text-[10px] text-teal-400 hover:text-teal-300 font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    Copiar
+                                </button>
+                            </div>
+                            <div class="bg-slate-950 rounded-xl p-3 border border-slate-800 overflow-x-auto h-[160px]">
+                                <pre id="code-html" class="text-[11px] text-emerald-400 code-font whitespace-pre-wrap break-all"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bloco de código JS -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 flex flex-col justify-between flex-1">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Código Vanilla JS Equivalente</span>
+                                <button onclick="copiarCodigo('code-js')" class="text-[10px] text-teal-400 hover:text-teal-300 font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    Copiar
+                                </button>
+                            </div>
+                            <div class="bg-slate-950 rounded-xl p-3 border border-slate-800 overflow-y-auto h-[180px]">
+                                <pre id="code-js" class="text-[11px] text-sky-400 code-font whitespace-pre"></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: DOCUMENTAÇÃO COMPLETA ================= -->
+        <section id="documentacao" class="scroll-mt-24 space-y-8 pt-6 border-t border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                <h2 class="text-2xl font-bold text-white">2. Guia de Atributos por Elemento</h2>
+            </div>
+
+            <!-- Tabela Dinâmica e interativa de Atributos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Polilinha -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;polyline&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Linhas Conectadas</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Desenha uma série de segmentos de reta conectados, geralmente sem preenchimento.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">points:</strong> Lista de coordenadas $x,y$ (Ex: "50,150 150,50 250,150").</li>
+                    </ul>
+                </div>
+
+                <!-- Polígono -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;polygon&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Formas Fechadas</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Semelhante à polilinha, mas o navegador conecta automaticamente o último ponto ao primeiro.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">points:</strong> Coordenadas $x,y$ das extremidades de cada aresta.</li>
+                    </ul>
+                </div>
+
+                <!-- Agrupamento -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;g&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Grupo</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Agrupa múltiplos elementos SVG para aplicar herança de estilos CSS ou transformações geométricas.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">transform:</strong> Aplica translate, scale, rotate ou skew ao grupo de uma vez.</li>
+                    </ul>
+                </div>
+
+                <!-- Gradiente Linear -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;linearGradient&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Gradientes</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Define uma transição suave entre múltiplas cores a ser usada no preenchimento de formas.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">x1 / y1:</strong> Ponto inicial do vetor de gradiente.</li>
+                        <li><strong class="text-teal-400">x2 / y2:</strong> Ponto final do vetor de gradiente.</li>
+                        <li><strong class="text-teal-400">&lt;stop&gt;:</strong> Define as cores e posições da transição.</li>
+                    </ul>
+                </div>
+
+                <!-- Recorte de Máscara -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;clipPath&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Recorte</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Oculta as partes de um elemento que ficam de fora da silhueta da forma de recorte definida.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">id:</strong> Identificador usado para chamar no CSS via `clip-path: url(#id)`.</li>
+                    </ul>
+                </div>
+
+                <!-- Máscara de Luminância -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;mask&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Máscara</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Combina o canal de alfa (transparência) e cores (branco revela, preto esconde) para mascarar elementos.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">id:</strong> Usado via propriedade CSS `mask: url(#id)`.</li>
+                    </ul>
+                </div>
+
+                <!-- Filtros Gaussianos -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;filter&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Efeitos</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Permite aplicar efeitos visuais de pós-processamento como desfoques e sombras ao vetor.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">&lt;feGaussianBlur&gt;:</strong> Executa o filtro de desfoque.</li>
+                        <li><strong class="text-teal-400">stdDeviation:</strong> O raio de intensidade do desfoque.</li>
+                    </ul>
+                </div>
+
+                <!-- Animações Nativas -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;animate&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Animação</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Anima atributos de geometria ou estilo do elemento pai diretamente de forma nativa e síncrona.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">attributeName:</strong> Nome do atributo alvo (Ex: "cx").</li>
+                        <li><strong class="text-teal-400">dur / repeatCount:</strong> Duração e quantidade de repetições.</li>
+                        <li><strong class="text-teal-400">from / to:</strong> Estados inicial e final do valor.</li>
+                    </ul>
+                </div>
+
+                <!-- HTML integrado -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-base font-semibold text-white code-font">&lt;foreignObject&gt;</h4>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-medium">Interoperabilidade</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Permite integrar elementos HTML nativos (divs, inputs, CSS) diretamente no espaço XML do SVG.</p>
+                    <ul class="text-xs space-y-1.5 text-slate-300 border-t border-slate-800/60 pt-2 font-mono">
+                        <li><strong class="text-teal-400">width / height:</strong> Tamanho da janela para o HTML renderizado.</li>
+                        <li><strong class="text-teal-400">xmlns:</strong> Namespace XHTML (`http://www.w3.org/1999/xhtml`).</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: GUIA DE ESTILOS CSS PARA SVG ================= -->
+        <section id="estilos" class="scroll-mt-24 space-y-6">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                <h2 class="text-2xl font-bold text-white">3. Estilização CSS Especializada para SVG</h2>
+            </div>
+            
+            <p class="text-sm text-slate-400">
+                Muitas propriedades que usamos em elementos HTML comuns (como <code class="text-slate-300">background-color</code> ou <code class="text-slate-300">border</code>) **não funcionam** em elementos internos do SVG. O SVG possui propriedades de estilo CSS exclusivas. Veja as principais a seguir:
+            </p>
+
+            <div class="overflow-x-auto bg-slate-900 border border-slate-800 rounded-2xl">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950 border-b border-slate-800 text-slate-300 font-bold">
+                            <th class="p-4">Propriedade CSS</th>
+                            <th class="p-4">Alternativa ao HTML</th>
+                            <th class="p-4">Valores Aceitos</th>
+                            <th class="p-4">Descrição de Efeito</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/50 text-slate-400 font-mono">
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">fill</td>
+                            <td class="p-4">background-color</td>
+                            <td class="p-4">Cores CSS, url(#idGradiente)</td>
+                            <td class="p-4 text-slate-300">Define a cor interna de preenchimento da forma geométrica.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">fill-opacity</td>
+                            <td class="p-4">opacity (do fundo)</td>
+                            <td class="p-4">0.0 a 1.0</td>
+                            <td class="p-4 text-slate-300">Altera apenas a opacidade do preenchimento interno, sem afetar as bordas.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">stroke</td>
+                            <td class="p-4">border-color</td>
+                            <td class="p-4">Cores CSS, gradients</td>
+                            <td class="p-4 text-slate-300">Define a cor da borda/linha do elemento gráfico.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">stroke-width</td>
+                            <td class="p-4">border-width</td>
+                            <td class="p-4">Valores numéricos ou px, em, rem</td>
+                            <td class="p-4 text-slate-300">Define a espessura da borda.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">stroke-dasharray</td>
+                            <td class="p-4">border-style (dashed)</td>
+                            <td class="p-4">Lista de valores separados por vírgula (ex: "5, 5")</td>
+                            <td class="p-4 text-slate-300">Transforma a borda sólida em linhas pontilhadas ou tracejadas customizadas.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">stroke-dashoffset</td>
+                            <td class="p-4">Não possui</td>
+                            <td class="p-4">Números (ex: 100)</td>
+                            <td class="p-4 text-slate-300">Desloca o ponto de partida do tracejado (fundamental para efeito de "desenhar linha").</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">stroke-linecap</td>
+                            <td class="p-4">Não possui</td>
+                            <td class="p-4">butt, round, square</td>
+                            <td class="p-4 text-slate-300">Altera o formato visual das extremidades de linhas abertas.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 text-teal-400 font-bold">vector-effect</td>
+                            <td class="p-4">Não possui</td>
+                            <td class="p-4">non-scaling-stroke, none</td>
+                            <td class="p-4 text-slate-300">Se definido como "non-scaling-stroke", impede que a borda engrosse se o SVG sofrer zoom ou redimensionamento.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SEÇÃO: MANIPULAÇÃO VIA JAVASCRIPT ================= -->
+        <section id="manipulacao" class="scroll-mt-24 space-y-6">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                <h2 class="text-2xl font-bold text-white">4. O Segredo do Namespace no JavaScript</h2>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                <p class="text-sm text-slate-300">
+                    Ao criar elementos gráficos SVG via JavaScript de forma dinâmica, a função padrão <code class="text-teal-300">document.createElement()</code> cria elementos no namespace de documentos HTML convencionais. Se você usá-la, os seletores SVG serão renderizados no DOM, mas **não aparecerão na tela** porque o navegador falhará ao tratá-los como elementos gráficos vetoriais.
+                </p>
+                <p class="text-sm text-slate-300">
+                    Para resolver isso, você precisa usar <code class="text-teal-400">document.createElementNS()</code> com o namespace do SVG de forma estrita.
+                </p>
+
+                <!-- Box de Destaque Técnico -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="bg-emerald-950/20 border border-emerald-500/20 rounded-2xl p-4">
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">A Maneira Correta (Sim!)</span>
+                        <pre class="text-xs text-slate-300 code-font mt-3 whitespace-pre-wrap">
+const SVG_NS = "http://www.w3.org/2000/svg";
+const circulo = document.createElementNS(SVG_NS, "circle");
+circulo.setAttribute("cx", "150");
+circulo.setAttribute("cy", "150");
+circulo.setAttribute("r", "50");
+document.getElementById("meu-svg").appendChild(circulo);</pre>
+                    </div>
+
+                    <div class="bg-red-950/20 border border-red-500/20 rounded-2xl p-4">
+                        <span class="text-xs bg-red-500/10 text-red-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">A Maneira Errada (Não funciona!)</span>
+                        <pre class="text-xs text-slate-300 code-font mt-3 whitespace-pre-wrap">
+// O navegador não renderiza o elemento
+const circulo = document.createElement("circle");
+circulo.setAttribute("cx", "150");
+circulo.setAttribute("cy", "150");
+circulo.setAttribute("r", "50");
+document.getElementById("meu-svg").appendChild(circulo);</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Pié de Página -->
+    <footer class="border-t border-slate-900 bg-slate-950 px-6 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>Guia Prático e Interativo do Desenvolvedor SVG - 2026</p>
+            <p class="text-[10px] text-slate-600">Construído em HTML5 puro, Tailwind CSS e Vanilla JavaScript.</p>
+        </div>
+    </footer>
+
+
+    <!-- ================= CONTROLE JAVASCRIPT DO PLAYGROUND ================= -->
+    <script>
+        // Namespace padrão do SVG
+        const SVG_NS = "http://www.w3.org/2000/svg";
+        
+        // Elemento da tela (canvas)
+        const canvas = document.getElementById("canvas-sandbox");
+        
+        // Estado atual da forma selecionada
+        let elementoSelecionado = "circle";
+        
+        // Catálogo explicativo e descritivo de cada elemento
+        const elementDescriptions = {
+            circle: "Desenha círculos perfeitos definidos por seu centro e raio.",
+            rect: "Desenha retângulos, quadrados e polígonos de 4 lados com cantos arredondados.",
+            ellipse: "Desenha elipses (ovais) a partir de um centro e raios diferentes no eixo X e Y.",
+            line: "Desenha um único segmento de reta conectando dois pontos exatos.",
+            polyline: "Desenha uma série de linhas conectadas baseada em um grid de pontos ordenados.",
+            polygon: "Desenha uma forma geométrica poligonal fechada com preenchimento interno nativo.",
+            path: "Desenha curvas complexas e formas livres através de comandos de coordenada vetorial.",
+            text: "Insere texto estilizado e perfeitamente escalável direto no ambiente vetorial.",
+            g: "Agrupamento lógico que serve para aplicar heranças de transformações em grupo.",
+            linearGradient: "Gradiente de cores linear para aplicar preenchimentos ricos e profissionais.",
+            clipPath: "Funciona como um estêncil gráfico de recorte baseado em uma silhueta.",
+            mask: "Máscara de transparência baseada nos canais de preto (oculta) e branco (mostra).",
+            filter: "Aplica efeitos sofisticados como desfoques e sombras dinâmicas.",
+            animate: "Cria animações temporizadas nativas nos atributos de uma tag.",
+            image: "Incorpora imagens raster externas (PNG, JPEG) no ambiente vetorial.",
+            foreignObject: "Insere e renderiza elementos de folha de estilo e HTML diretamente no SVG."
+        };
+
+        // Valores padrão de geometria por forma
+        const geometria = {
+            circle: { cx: 150, cy: 150, r: 60 },
+            rect: { x: 50, y: 50, width: 200, height: 200, rx: 15, ry: 15 },
+            ellipse: { cx: 150, cy: 150, rx: 90, ry: 60 },
+            line: { x1: 50, y1: 50, x2: 250, y2: 250 },
+            polyline: { p1_x: 50, p1_y: 150, p2_x: 120, p2_y: 50, p3_x: 190, p3_y: 150, p4_x: 260, p4_y: 50 },
+            polygon: { p1_x: 150, p1_y: 40, p2_x: 250, p2_y: 240, p3_x: 50, p3_y: 240 },
+            path: { d: "M 50 200 Q 150 50, 250 200" },
+            text: { x: 150, y: 160, texto: "Texto SVG!", "font-size": 28, "text-anchor": "middle" },
+            g: { tx: 0, ty: 0 },
+            linearGradient: { x1: 0, y1: 0, x2: 100, y2: 100 },
+            clipPath: { cx: 150, cy: 150, r: 70 },
+            mask: { cx: 150, cy: 150, r: 75 },
+            filter: { stdDeviation: 6 },
+            animate: { de: 50, para: 250, duracao: 3 },
+            image: { x: 50, y: 50, width: 200, height: 200, href: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=200" },
+            foreignObject: { x: 40, y: 40, width: 220, height: 220, html: '<div style="color:white; background:linear-gradient(45deg, #10b981, #3b82f6); padding:15px; border-radius:10px; font-family:sans-serif; text-align:center; font-size:14px; font-weight:bold;">HTML nativo dentro do SVG!</div>' }
+        };
+
+        // Estado padrão dos estilos CSS do SVG
+        const estilos = {
+            fill: "#14b8a6",
+            "fill-opacity": "1",
+            stroke: "#0f766e",
+            "stroke-width": "4px",
+            "stroke-dasharray": "none",
+            "stroke-linecap": "butt"
+        };
+
+        // Inicializar aplicação
+        window.onload = () => {
+            renderizarFormularioControle();
+            atualizarCanvas();
+        };
+
+        // Selecionar outro elemento
+        function selecionarElemento(tipo) {
+            elementoSelecionado = tipo;
+            renderizarFormularioControle();
+            atualizarCanvas();
+        }
+
+        // Renderiza as opções de atributos dinamicamente no formulário esquerdo
+        function renderizarFormularioControle() {
+            const container = document.getElementById("dynamic-attributes-container");
+            container.innerHTML = ""; // Limpa anterior
+            
+            // Atualiza descrição rápida do elemento
+            document.getElementById("element-quick-desc").innerText = elementDescriptions[elementoSelecionado];
+
+            // Controla a visibilidade do painel geral de estilos para elementos que não os aceitam diretamente
+            const stylingPanel = document.getElementById("styling-panel");
+            const nonStyledElements = ["linearGradient", "clipPath", "mask", "filter", "animate"];
+            if (nonStyledElements.includes(elementoSelecionado)) {
+                stylingPanel.classList.add("hidden");
+            } else {
+                stylingPanel.classList.remove("hidden");
+            }
+
+            const attrs = geometria[elementoSelecionado];
+
+            for (const chave in attrs) {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "space-y-1";
+
+                let inputHtml = "";
+                const valAtual = attrs[chave];
+
+                // Condição para renderizar inputs diferentes baseados nos atributos de cada forma
+                if (chave === "texto" || chave === "href") {
+                    inputHtml = `<input type="text" value="${valAtual}" oninput="atualizarAtributo('${chave}', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200">`;
+                } else if (chave === "d") {
+                    inputHtml = `<textarea oninput="atualizarAtributo('${chave}', this.value)" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 code-font">${valAtual}</textarea>`;
+                } else if (chave === "html") {
+                    inputHtml = `<textarea oninput="atualizarAtributo('${chave}', this.value)" rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200 code-font">${valAtual}</textarea>`;
+                } else if (chave === "text-anchor") {
+                    inputHtml = `
+                        <select onchange="atualizarAtributo('${chave}', this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                            <option value="start" ${valAtual === 'start' ? 'selected' : ''}>Start (Esquerda)</option>
+                            <option value="middle" ${valAtual === 'middle' ? 'selected' : ''}>Middle (Centro)</option>
+                            <option value="end" ${valAtual === 'end' ? 'selected' : ''}>End (Direita)</option>
+                        </select>
+                    `;
+                } else {
+                    // Controles deslizantes para coordenadas e tamanhos numéricos (de 0 a 300 baseados no viewBox)
+                    let maxVal = 300;
+                    let minVal = 0;
+                    let step = 1;
+
+                    if (chave === "r" || chave === "rx" || chave === "ry" || chave === "font-size") {
+                        maxVal = 150;
+                    } else if (chave === "stdDeviation") {
+                        maxVal = 20;
+                        minVal = 0;
+                    } else if (chave === "duracao") {
+                        maxVal = 10;
+                        minVal = 0.5;
+                        step = 0.5;
+                    }
+
+                    inputHtml = `
+                        <input type="range" min="${minVal}" max="${maxVal}" step="${step}" value="${valAtual}" oninput="atualizarAtributo('${chave}', parseFloat(this.value))" class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                    `;
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                        <span class="code-font text-teal-400">${chave}</span>
+                        <span id="val-attr-${chave}">${valAtual}</span>
+                    </div>
+                    ${inputHtml}
+                `;
+
+                container.appendChild(itemDiv);
+            }
+        }
+
+        // Atualiza valor de atributos de geometria no estado local e reconstrói tela
+        function atualizarAtributo(chave, valor) {
+            geometria[elementoSelecionado][chave] = valor;
+            
+            // Atualiza label de texto de indicação rápida
+            const labelVal = document.getElementById(`val-attr-${chave}`);
+            if (labelVal) {
+                labelVal.innerText = valor;
+            }
+            
+            atualizarCanvas();
+        }
+
+        // Atualiza estilo inline no estado local e reconstrói tela
+        function atualizarEstilo(propriedade, valor) {
+            estilos[propriedade] = valor;
+            
+            // Atualiza inputs visuais se necessário
+            if (propriedade === 'fill') {
+                document.getElementById('style-fill').value = valor;
+                document.getElementById('text-fill').value = valor;
+                document.getElementById('val-fill').innerText = valor;
+            }
+            if (propriedade === 'stroke') {
+                document.getElementById('style-stroke').value = valor;
+                document.getElementById('text-stroke').value = valor;
+                document.getElementById('val-stroke').innerText = valor;
+            }
+            if (propriedade === 'fill-opacity') {
+                document.getElementById('val-fill-opacity').innerText = valor;
+            }
+            if (propriedade === 'stroke-width') {
+                document.getElementById('val-stroke-width').innerText = valor;
+            }
+            
+            atualizarCanvas();
+        }
+
+        // Reconstrói e redesenha o canvas baseado nas configurações atuais de estado
+        function atualizarCanvas() {
+            // Limpa o canvas por completo e recria definições internas estruturais
+            canvas.innerHTML = "";
+
+            const defs = document.createElementNS(SVG_NS, "defs");
+            canvas.appendChild(defs);
+
+            const attrs = geometria[elementoSelecionado];
+            let activeElement = null;
+
+            // Tratamento especial para montagem gráfica avançada
+            switch(elementoSelecionado) {
+                case "polyline":
+                    activeElement = document.createElementNS(SVG_NS, "polyline");
+                    activeElement.setAttribute("points", `${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y} ${attrs.p4_x},${attrs.p4_y}`);
+                    aplicarEstilosPadrao(activeElement);
+                    break;
+
+                case "polygon":
+                    activeElement = document.createElementNS(SVG_NS, "polygon");
+                    activeElement.setAttribute("points", `${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y}`);
+                    aplicarEstilosPadrao(activeElement);
+                    break;
+
+                case "g":
+                    // Cria grupo translacionável
+                    activeElement = document.createElementNS(SVG_NS, "g");
+                    activeElement.setAttribute("transform", `translate(${attrs.tx}, ${attrs.ty})`);
+                    
+                    // Elementos internos de demonstração do grupo
+                    const gCirculo = document.createElementNS(SVG_NS, "circle");
+                    gCirculo.setAttribute("cx", "80");
+                    gCirculo.setAttribute("cy", "80");
+                    gCirculo.setAttribute("r", "40");
+                    gCirculo.setAttribute("fill", estilos.fill);
+                    gCirculo.setAttribute("stroke", estilos.stroke);
+                    gCirculo.setAttribute("stroke-width", estilos["stroke-width"]);
+                    
+                    const gRect = document.createElementNS(SVG_NS, "rect");
+                    gRect.setAttribute("x", "140");
+                    gRect.setAttribute("y", "40");
+                    gRect.setAttribute("width", "80");
+                    gRect.setAttribute("height", "80");
+                    gRect.setAttribute("fill", estilos.stroke);
+                    
+                    activeElement.appendChild(gCirculo);
+                    activeElement.appendChild(gRect);
+                    break;
+
+                case "linearGradient":
+                    // Definições de gradiente
+                    const grad = document.createElementNS(SVG_NS, "linearGradient");
+                    grad.setAttribute("id", "playgroundGrad");
+                    grad.setAttribute("x1", `${attrs.x1}%`);
+                    grad.setAttribute("y1", `${attrs.y1}%`);
+                    grad.setAttribute("x2", `${attrs.x2}%`);
+                    grad.setAttribute("y2", `${attrs.y2}%`);
+                    
+                    const stop1 = document.createElementNS(SVG_NS, "stop");
+                    stop1.setAttribute("offset", "0%");
+                    stop1.setAttribute("stop-color", "#14b8a6");
+                    
+                    const stop2 = document.createElementNS(SVG_NS, "stop");
+                    stop2.setAttribute("offset", "100%");
+                    stop2.setAttribute("stop-color", "#ef4444");
+                    
+                    grad.appendChild(stop1);
+                    grad.appendChild(stop2);
+                    defs.appendChild(grad);
+
+                    // Desenha forma para mostrar o gradiente
+                    activeElement = document.createElementNS(SVG_NS, "rect");
+                    activeElement.setAttribute("x", "50");
+                    activeElement.setAttribute("y", "50");
+                    activeElement.setAttribute("width", "200");
+                    activeElement.setAttribute("height", "200");
+                    activeElement.setAttribute("rx", "15");
+                    activeElement.setAttribute("fill", "url(#playgroundGrad)");
+                    break;
+
+                case "clipPath":
+                    // Cria clipPath geométrico
+                    const clip = document.createElementNS(SVG_NS, "clipPath");
+                    clip.setAttribute("id", "playgroundClip");
+                    const clipCirc = document.createElementNS(SVG_NS, "circle");
+                    clipCirc.setAttribute("cx", attrs.cx);
+                    clipCirc.setAttribute("cy", attrs.cy);
+                    clipCirc.setAttribute("r", attrs.r);
+                    clip.appendChild(clipCirc);
+                    defs.appendChild(clip);
+
+                    // Retângulo de base que sofrerá o recorte
+                    activeElement = document.createElementNS(SVG_NS, "rect");
+                    activeElement.setAttribute("x", "50");
+                    activeElement.setAttribute("y", "50");
+                    activeElement.setAttribute("width", "200");
+                    activeElement.setAttribute("height", "200");
+                    activeElement.setAttribute("fill", "#14b8a6");
+                    activeElement.setAttribute("clip-path", "url(#playgroundClip)");
+                    break;
+
+                case "mask":
+                    // Cria máscara de luminância
+                    const mask = document.createElementNS(SVG_NS, "mask");
+                    mask.setAttribute("id", "playgroundMask");
+                    
+                    // Retângulo de fundo preto (esconde)
+                    const maskBg = document.createElementNS(SVG_NS, "rect");
+                    maskBg.setAttribute("width", "100%");
+                    maskBg.setAttribute("height", "100%");
+                    maskBg.setAttribute("fill", "black");
+                    
+                    // Círculo branco (revela)
+                    const maskCirc = document.createElementNS(SVG_NS, "circle");
+                    maskCirc.setAttribute("cx", attrs.cx);
+                    maskCirc.setAttribute("cy", attrs.cy);
+                    maskCirc.setAttribute("r", attrs.r);
+                    maskCirc.setAttribute("fill", "white");
+                    
+                    mask.appendChild(maskBg);
+                    mask.appendChild(maskCirc);
+                    defs.appendChild(mask);
+
+                    // Elemento final mascarado
+                    activeElement = document.createElementNS(SVG_NS, "rect");
+                    activeElement.setAttribute("x", "40");
+                    activeElement.setAttribute("y", "40");
+                    activeElement.setAttribute("width", "220");
+                    activeElement.setAttribute("height", "220");
+                    activeElement.setAttribute("fill", "#8b5cf6");
+                    activeElement.setAttribute("mask", "url(#playgroundMask)");
+                    break;
+
+                case "filter":
+                    // Filtro Gaussiano Blur
+                    const filter = document.createElementNS(SVG_NS, "filter");
+                    filter.setAttribute("id", "playgroundFilter");
+                    const blur = document.createElementNS(SVG_NS, "feGaussianBlur");
+                    blur.setAttribute("stdDeviation", attrs.stdDeviation);
+                    filter.appendChild(blur);
+                    defs.appendChild(filter);
+
+                    // Desenha círculo que receberá o filtro
+                    activeElement = document.createElementNS(SVG_NS, "circle");
+                    activeElement.setAttribute("cx", "150");
+                    activeElement.setAttribute("cy", "150");
+                    activeElement.setAttribute("r", "70");
+                    activeElement.setAttribute("fill", "#ef4444");
+                    activeElement.setAttribute("filter", "url(#playgroundFilter)");
+                    break;
+
+                case "animate":
+                    // Círculo base da animação
+                    activeElement = document.createElementNS(SVG_NS, "circle");
+                    activeElement.setAttribute("cy", "150");
+                    activeElement.setAttribute("r", "40");
+                    aplicarEstilosPadrao(activeElement);
+
+                    // Elemento animador nativo
+                    const anim = document.createElementNS(SVG_NS, "animate");
+                    anim.setAttribute("attributeName", "cx");
+                    anim.setAttribute("from", attrs.de);
+                    anim.setAttribute("to", attrs.para);
+                    anim.setAttribute("dur", `${attrs.duracao}s`);
+                    anim.setAttribute("repeatCount", "indefinite");
+                    activeElement.appendChild(anim);
+                    break;
+
+                case "foreignObject":
+                    // Incorpora HTML
+                    activeElement = document.createElementNS(SVG_NS, "foreignObject");
+                    activeElement.setAttribute("x", attrs.x);
+                    activeElement.setAttribute("y", attrs.y);
+                    activeElement.setAttribute("width", attrs.width);
+                    activeElement.setAttribute("height", attrs.height);
+
+                    const extHtml = document.createElement("div");
+                    extHtml.innerHTML = attrs.html;
+                    // Força a inserção em namespace correto para exibição inline
+                    extHtml.firstChild.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+                    activeElement.appendChild(extHtml.firstChild);
+                    break;
+
+                case "text":
+                    activeElement = document.createElementNS(SVG_NS, "text");
+                    activeElement.setAttribute("x", attrs.x);
+                    activeElement.setAttribute("y", attrs.y);
+                    activeElement.setAttribute("font-size", attrs["font-size"]);
+                    activeElement.setAttribute("text-anchor", attrs["text-anchor"]);
+                    activeElement.setAttribute("dominant-baseline", "middle");
+                    activeElement.textContent = attrs.texto;
+                    aplicarEstilosPadrao(activeElement);
+                    break;
+
+                case "image":
+                    activeElement = document.createElementNS(SVG_NS, "image");
+                    activeElement.setAttribute("x", attrs.x);
+                    activeElement.setAttribute("y", attrs.y);
+                    activeElement.setAttribute("width", attrs.width);
+                    activeElement.setAttribute("height", attrs.height);
+                    activeElement.setAttribute("href", attrs.href);
+                    break;
+
+                default:
+                    // Tratamento geral para formas básicas simples (circle, rect, ellipse, line, path)
+                    activeElement = document.createElementNS(SVG_NS, elementoSelecionado);
+                    for (const chave in attrs) {
+                        activeElement.setAttribute(chave, attrs[chave]);
+                    }
+                    aplicarEstilosPadrao(activeElement);
+            }
+
+            if (activeElement) {
+                canvas.appendChild(activeElement);
+            }
+
+            // Atualiza blocos de geração de códigos demonstrativos
+            gerarCodigoDemonstrativo(attrs);
+        }
+
+        // Aplica os estilos selecionados do painel
+        function aplicarEstilosPadrao(el) {
+            for (const chave in estilos) {
+                el.style.setProperty(chave, estilos[chave]);
+            }
+        }
+
+        // Converte as propriedades de estado em textos explicativos (HTML e JS)
+        function gerarCodigoDemonstrativo(attrs) {
+            const codeHtmlPre = document.getElementById("code-html");
+            const codeJsPre = document.getElementById("code-js");
+
+            // --- Gerar String HTML ---
+            let htmlFinal = "";
+            let strStyles = "";
+            for (const chave in estilos) {
+                strStyles += `${chave}: ${estilos[chave]}; `;
+            }
+
+            switch(elementoSelecionado) {
+                case "polyline":
+                    htmlFinal = `&lt;polyline points="${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y} ${attrs.p4_x},${attrs.p4_y}" style="${strStyles.trim()}" /&gt;`;
+                    break;
+                case "polygon":
+                    htmlFinal = `&lt;polygon points="${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y}" style="${strStyles.trim()}" /&gt;`;
+                    break;
+                case "g":
+                    htmlFinal = `&lt;g transform="translate(${attrs.tx}, ${attrs.ty})"&gt;\n  &lt;circle cx="80" cy="80" r="40" style="${strStyles.trim()}" /&gt;\n  &lt;rect x="140" y="40" width="80" height="80" fill="${estilos.stroke}" /&gt;\n&lt;/g&gt;`;
+                    break;
+                case "linearGradient":
+                    htmlFinal = `&lt;defs&gt;\n  &lt;linearGradient id="g1" x1="${attrs.x1}%" y1="${attrs.y1}%" x2="${attrs.x2}%" y2="${attrs.y2}%"&gt;\n    &lt;stop offset="0%" stop-color="#14b8a6"/&gt;\n    &lt;stop offset="100%" stop-color="#ef4444"/&gt;\n  &lt;/linearGradient&gt;\n&lt;/defs&gt;\n&lt;rect width="200" height="200" fill="url(#g1)" /&gt;`;
+                    break;
+                case "clipPath":
+                    htmlFinal = `&lt;defs&gt;\n  &lt;clipPath id="c1"&gt;\n    &lt;circle cx="${attrs.cx}" cy="${attrs.cy}" r="${attrs.r}" /&gt;\n  &lt;/clipPath&gt;\n&lt;/defs&gt;\n&lt;rect width="200" height="200" fill="#14b8a6" clip-path="url(#c1)" /&gt;`;
+                    break;
+                case "mask":
+                    htmlFinal = `&lt;defs&gt;\n  &lt;mask id="m1"&gt;\n    &lt;rect width="100%" height="100%" fill="black" /&gt;\n    &lt;circle cx="${attrs.cx}" cy="${attrs.cy}" r="${attrs.r}" fill="white" /&gt;\n  &lt;/mask&gt;\n&lt;/defs&gt;\n&lt;rect width="220" height="220" fill="#8b5cf6" mask="url(#m1)" /&gt;`;
+                    break;
+                case "filter":
+                    htmlFinal = `&lt;defs&gt;\n  &lt;filter id="f1"&gt;\n    &lt;feGaussianBlur stdDeviation="${attrs.stdDeviation}" /&gt;\n  &lt;/filter&gt;\n&lt;/defs&gt;\n&lt;circle cx="150" cy="150" r="70" fill="#ef4444" filter="url(#f1)" /&gt;`;
+                    break;
+                case "animate":
+                    htmlFinal = `&lt;circle cy="150" r="40" style="${strStyles.trim()}"&gt;\n  &lt;animate attributeName="cx" from="${attrs.de}" to="${attrs.para}" dur="${attrs.duracao}s" repeatCount="indefinite" /&gt;\n&lt;/circle&gt;`;
+                    break;
+                case "foreignObject":
+                    htmlFinal = `&lt;foreignObject x="${attrs.x}" y="${attrs.y}" width="${attrs.width}" height="${attrs.height}"&gt;\n  &lt;div xmlns="http://www.w3.org/1999/xhtml"&gt;\n    &lt;!-- Seu HTML aqui --&gt;\n  &lt;/div&gt;\n&lt;/foreignObject&gt;`;
+                    break;
+                case "text":
+                    htmlFinal = `&lt;text x="${attrs.x}" y="${attrs.y}" font-size="${attrs['font-size']}" text-anchor="${attrs['text-anchor']}" style="${strStyles.trim()}"&gt;${attrs.texto}&lt;/text&gt;`;
+                    break;
+                case "image":
+                    htmlFinal = `&lt;image x="${attrs.x}" y="${attrs.y}" width="${attrs.width}" height="${attrs.height}" href="${attrs.href}" /&gt;`;
+                    break;
+                default:
+                    let strAttrs = "";
+                    for (const chave in attrs) {
+                        strAttrs += ` ${chave}="${attrs[chave]}"`;
+                    }
+                    htmlFinal = `&lt;${elementoSelecionado}${strAttrs} style="${strStyles.trim()}" /&gt;`;
+            }
+
+            codeHtmlPre.innerHTML = htmlFinal;
+
+            // --- Gerar String Vanilla JS correspondente ---
+            let jsString = `// 1. Defina o Namespace específico do SVG\n`;
+            jsString += `const SVG_NS = "http://www.w3.org/2000/svg";\n\n`;
+            jsString += `// 2. Crie o elemento declarando o Namespace\n`;
+            jsString += `const el = document.createElementNS(SVG_NS, "${elementoSelecionado}");\n\n`;
+
+            if (elementoSelecionado === "polyline") {
+                jsString += `// 3. Configure os pontos estruturais\n`;
+                jsString += `el.setAttribute("points", "${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y} ${attrs.p4_x},${attrs.p4_y}");\n`;
+            } else if (elementoSelecionado === "polygon") {
+                jsString += `// 3. Configure os vértices do polígono\n`;
+                jsString += `el.setAttribute("points", "${attrs.p1_x},${attrs.p1_y} ${attrs.p2_x},${attrs.p2_y} ${attrs.p3_x},${attrs.p3_y}");\n`;
+            } else if (elementoSelecionado === "g") {
+                jsString += `// 3. Aplique as transformações espaciais\n`;
+                jsString += `el.setAttribute("transform", "translate(${attrs.tx}, ${attrs.ty})");\n`;
+            } else if (elementoSelecionado === "linearGradient") {
+                jsString += `// 3. Crie e monte os stops do gradiente\n`;
+                jsString += `el.setAttribute("id", "g1");\n`;
+                jsString += `el.setAttribute("x1", "${attrs.x1}%");\n`;
+                jsString += `el.setAttribute("y1", "${attrs.y1}%");\n`;
+                jsString += `el.setAttribute("x2", "${attrs.x2}%");\n`;
+                jsString += `el.setAttribute("y2", "${attrs.y2}%");\n`;
+            } else if (elementoSelecionado === "animate") {
+                jsString += `// 3. Configure a transição de atributos temporizada\n`;
+                jsString += `el.setAttribute("attributeName", "cx");\n`;
+                jsString += `el.setAttribute("from", "${attrs.de}");\n`;
+                jsString += `el.setAttribute("to", "${attrs.para}");\n`;
+                jsString += `el.setAttribute("dur", "${attrs.duracao}s");\n`;
+                jsString += `el.setAttribute("repeatCount", "indefinite");\n`;
+            } else {
+                jsString += `// 3. Aplique as coordenadas de Geometria\n`;
+                for (const chave in attrs) {
+                    if (chave === "texto") {
+                        jsString += `el.textContent = "${attrs[chave]}";\n`;
+                    } else if (chave !== "html") {
+                        jsString += `el.setAttribute("${chave}", "${attrs[chave]}");\n`;
+                    }
+                }
+            }
+
+            const nonStyledElements = ["linearGradient", "clipPath", "mask", "filter", "animate"];
+            if (!nonStyledElements.includes(elementoSelecionado)) {
+                jsString += `\n// 4. Aplique as propriedades de estilo CSS do SVG\n`;
+                for (const chave in estilos) {
+                    jsString += `el.style.setProperty("${chave}", "${estilos[chave]}");\n`;
+                }
+            }
+
+            jsString += `\n// 5. Adicione-o no contêiner &lt;svg&gt; alvo\n`;
+            jsString += `document.getElementById("seu-svg").appendChild(el);`;
+
+            codeJsPre.innerHTML = jsString;
+        }
+
+        // Copiador de código seguro via Textarea temporária (Seguro contra restrições de iFrames)
+        function copiarCodigo(idElemento) {
+            const preElement = document.getElementById(idElemento);
+            
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = preElement.innerText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextArea);
+
+            // Exibir aviso de sucesso estilizado na tela
+            mostrarToast("Código copiado para a área de transferência!");
+        }
+
+        function mostrarToast(mensagem) {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toast-message");
+            toastMsg.innerText = mensagem;
+            
+            toast.classList.remove("translate-y-20", "opacity-0");
+            toast.classList.add("translate-y-0", "opacity-100");
+
+            setTimeout(() => {
+                toast.classList.remove("translate-y-0", "opacity-100");
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
