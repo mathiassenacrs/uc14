@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://fonts.cdnfonts.com/css/digital-7-mono" rel="stylesheet">
+    <title>SVG</title>
+	<style>
+		#s1{
+		 font-family: 'Digital-7 Mono', sans-serif;
+		}
+		#a{
+			border:1px solid red;
+			width:1000px;
+			height:1000px;
+			position: absolute;
+		}
+		#b{
+		  position: absolute;
+		  left: 10%;
+		  top: 20%;
+		}
+		.image{
+		  position: absolute;
+		  left: 0%;
+		  top: 0%;
+		  z-index: -1;
+		  width:100%;
+		}
+	</style>
+</head>
+<body>
+
+	<div id='a'>
+		<input id='b' type='range' value='30' min='0' max='200'disabled>
+		<object class='image' id="svgObject" type="image/svg+xml" data="esteira.svg"></object>
+	</div>
+
+    <script>
+		let bola;
+		let ret;
+		let ret_led;
+		let carro;
+		let ret_carro;
+		let text;
+		const rangeInput = document.getElementById("b");
+		const svgObject = document.getElementById('svgObject');
+		
+		/**
+		 * Atualiza a translação (X e Y) da matriz de um elemento.
+		 * @param {HTMLElement|SVGElement} elemento - O elemento HTML/SVG (ex: bola1)
+		 * @param {number|null} novoX - Novo valor para X (ou null para manter)
+		 * @param {number|null} novoY - Novo valor para Y (ou null para manter)
+		 */
+		function atualizarPosicaoMatrix(elemento, novoX, novoY) {
+			if (!elemento) return;
+			// 1. Pega o transform atual ou cria uma matriz nova se não existir
+			const transform = elemento.getAttribute("transform");
+			const matrix = transform ? new DOMMatrix(transform) : new DOMMatrix();
+			// 2. Só altera o X se o valor não for nulo/indefinido
+			// No DOMMatrix, o 5º valor (X) é a propriedade 'e'
+			if (novoX !== null && novoX !== undefined) {
+				matrix.e = Number(novoX);
+			}
+			// 3. Só altera o Y se o valor não for nulo/indefinido
+			// No DOMMatrix, o 6º valor (Y) é a propriedade 'f'
+			if (novoY !== null && novoY !== undefined) {
+				matrix.f = Number(novoY);
+			}
+			// 4. Aplica a nova matriz de volta no elemento
+			elemento.setAttribute("transform", matrix.toString());
+		}
+
+
+		// Função que atualiza a posição e cor da bola
+		function atualizarValor() {
+			if (!bola) return; // Proteção caso a bola ainda não tenha sido mapeada
+			
+			let value = rangeInput.value;
+			bola.setAttribute("cx", value);
+			atualizarPosicaoMatrix(ret,value,null); 
+			atualizarPosicaoMatrix(ret_carro,value-50,null); 
+
+			if (value < 50) {
+				bola.style.fill = "gray";
+				ret_led.style.fill = "blue";
+				text.innerHTML="INICIO";
+				text.style.fill="red";
+			} else {
+				bola.style.fill = "green";
+				ret_led.style.fill = "red";
+				text.innerHTML="FIM";
+				text.style.fill="green";
+			}
+		}
+
+		// Adiciona o evento para o controle de range
+		rangeInput.addEventListener("input", atualizarValor);
+		
+		// O SEGREDO ESTÁ AQUI: Evento disparado assim que o arquivo SVG termina de carregar
+		svgObject.addEventListener("load", function() {
+			const svgDoc = svgObject.contentDocument;
+			// Busca a bola dentro do SVG carregado
+			bola = svgDoc.getElementById('bola');
+			ret = svgDoc.getElementById('ret');
+			ret_led = svgDoc.getElementById('ret_led');
+			carro = svgDoc.getElementById('carro');
+			ret_carro = svgDoc.getElementById('ret_carro');
+			text = svgDoc.getElementById('text');
+			if (bola) {
+				bola.style.fill = "gray";
+				// Ativa o input de range agora que o SVG está pronto para manipulação
+				rangeInput.disabled = false;
+				// Sincroniza a posição inicial do SVG com o valor padrão do input (10)
+				atualizarValor();
+			} else {
+				console.error("Elemento '#bola' não foi encontrado dentro do SVG.");
+			}
+		});
+    </script>
+</body>
+</html>
