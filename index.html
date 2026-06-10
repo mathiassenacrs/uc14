@@ -475,7 +475,12 @@
         const bucket = new BucketClient(MEU_TOKEN);
 
         // Data limite hoje para comparação visual (Sistema em 01/06/2026)
-        const TODAY_ISO = "2026-06-01";
+        // Data limite dinâmica (Sistema)
+        const TODAY_ISO = new Date().toISOString().split("T")[0];
+        
+        console.log(TODAY_ISO); 
+        // Exemplo de saída: "2026-06-08"
+
 
         // Grade de Fallback Original (UC14 - Técnico em Informática)
         const fallbackCourseData = {
